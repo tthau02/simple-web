@@ -1,0 +1,23 @@
+## Build
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+## Visual Studio
+.vs/
+*.user
+*.userosscache
+*.suo
+*.cache
+
+## Rider
+.idea/
+
+## NuGet
+*.nupkg
+**/packages/
+
+## OS
+Thumbs.db
+Desktop.ini
