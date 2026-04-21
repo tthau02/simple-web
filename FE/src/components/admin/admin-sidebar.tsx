@@ -12,6 +12,7 @@ import {
   isAdminNavHrefActive,
 } from "@/config/admin-nav";
 import { clientRoutes } from "@/config/routes";
+import { Sidebar, SidebarProvider } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 
 const STORAGE_COLLAPSED = "admin-sidebar-collapsed";
@@ -96,7 +97,10 @@ function ExpandedNavRows({
                         : "text-white/80 hover:bg-white/10 hover:text-white",
                     )}
                   >
-                    <item.icon className="size-4 shrink-0 opacity-90" aria-hidden />
+                    <item.icon
+                      className="size-4 shrink-0 opacity-90"
+                      aria-hidden
+                    />
                     <span className="truncate">{item.label}</span>
                   </Link>
                 ) : (
@@ -111,7 +115,10 @@ function ExpandedNavRows({
                         : "text-white/80 hover:bg-white/10 hover:text-white",
                     )}
                   >
-                    <item.icon className="size-4 shrink-0 opacity-90" aria-hidden />
+                    <item.icon
+                      className="size-4 shrink-0 opacity-90"
+                      aria-hidden
+                    />
                     <span className="flex-1 truncate text-xs font-semibold tracking-wide uppercase">
                       {item.label}
                     </span>
@@ -229,7 +236,8 @@ function CollapsedRail({
                 onClick={() => setFlyoutId(open ? null : item.id)}
                 className={cn(
                   "flex size-10 items-center justify-center rounded-[12px] text-white/85 transition-colors hover:bg-white/10 hover:text-white",
-                  isAdminNavBranchActive(item, pathname) && "bg-white/15 text-white",
+                  isAdminNavBranchActive(item, pathname) &&
+                    "bg-white/15 text-white",
                 )}
                 title={item.label}
                 aria-expanded={open}
@@ -260,7 +268,10 @@ function CollapsedRail({
                               : "text-white/85 hover:bg-white/10 hover:text-white",
                           )}
                         >
-                          <child.icon className="size-4 shrink-0 opacity-90" aria-hidden />
+                          <child.icon
+                            className="size-4 shrink-0 opacity-90"
+                            aria-hidden
+                          />
                           <span className="truncate">{child.label}</span>
                         </Link>
                       );
@@ -305,7 +316,10 @@ export function AdminSidebar({ userPermissions }: AdminSidebarProps) {
 
   useEffect(() => {
     try {
-      if (typeof window !== "undefined" && localStorage.getItem(STORAGE_COLLAPSED) === "1") {
+      if (
+        typeof window !== "undefined" &&
+        localStorage.getItem(STORAGE_COLLAPSED) === "1"
+      ) {
         setCollapsed(true);
       }
     } catch {
@@ -339,84 +353,101 @@ export function AdminSidebar({ userPermissions }: AdminSidebarProps) {
   }, []);
 
   return (
-    <aside
-      data-collapsed={collapsed ? "" : undefined}
-      aria-label="Điều hướng quản trị"
-      className={cn(
-        "flex shrink-0 flex-col border-r border-white/10 bg-[var(--brand-house)] text-white transition-[width] motion-reduce:transition-none md:flex",
-        collapsed ? "w-14" : "w-full md:w-56 lg:w-64",
-      )}
-      style={{
-        transitionDuration: expanderMs,
-        transitionTimingFunction: expanderEase,
-      }}
-    >
-      <div
+    <SidebarProvider defaultOpen={!collapsed}>
+      <Sidebar
+        data-collapsed={collapsed ? "" : undefined}
+        aria-label="Điều hướng quản trị"
         className={cn(
-          "border-b border-white/10 transition-[padding] motion-reduce:transition-none",
-          collapsed ? "px-2 py-3" : "px-4 py-4",
+          "border-r border-white/10 bg-[var(--brand-house)] text-white transition-[width] motion-reduce:transition-none md:flex",
+          collapsed ? "w-14" : "w-full md:w-56 lg:w-64",
         )}
-        style={{ transitionDuration: expanderMs, transitionTimingFunction: expanderEase }}
+        style={{
+          transitionDuration: expanderMs,
+          transitionTimingFunction: expanderEase,
+        }}
       >
-        {collapsed ? (
-          <div className="flex justify-center" aria-hidden>
-            <span className="flex size-10 items-center justify-center rounded-[12px] bg-white/10 text-sm font-semibold text-white">
-              C
-            </span>
-          </div>
-        ) : (
-          <>
-            <p className="text-xs font-medium tracking-wide text-white/70 uppercase">
-              Quản trị
-            </p>
-            <p className="mt-1 text-lg font-semibold tracking-[-0.01em]">Café Admin</p>
-          </>
-        )}
-      </div>
-
-      <nav className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden" aria-label="Admin">
-        {collapsed ? (
-          <CollapsedRail items={visible} pathname={pathname} />
-        ) : (
-          <div className="p-2">
-            <ExpandedNavRows
-              items={visible}
-              pathname={pathname}
-              depth={0}
-              expandedIds={expandedIds}
-              toggleSection={toggleSection}
-            />
-          </div>
-        )}
-      </nav>
-
-      <div className="mt-auto border-t border-white/10 p-2">
-        <div className="flex items-center gap-2">
-          <Link
-            href={clientRoutes.home}
-            className="flex min-w-0 flex-1 items-center gap-2 rounded-[12px] px-2 py-2 text-sm text-white/80 transition-colors hover:bg-white/10 hover:text-white"
-            title="Về cửa hàng"
-          >
-            <span aria-hidden className="shrink-0 text-base">
-              ←
-            </span>
-            {!collapsed ? <span className="truncate">Về cửa hàng</span> : null}
-          </Link>
-          <button
-            type="button"
-            onClick={() => setCollapsed((c) => !c)}
-            className="flex size-9 shrink-0 items-center justify-center rounded-[12px] border border-white/15 text-white/90 transition-colors hover:bg-white/10 hover:text-white"
-            aria-label={collapsed ? "Mở rộng sidebar" : "Thu gọn sidebar"}
-            title={collapsed ? "Mở rộng sidebar" : "Thu gọn sidebar"}
-          >
-            {collapsed ? (
-              <ChevronsRight className="size-5" strokeWidth={2} aria-hidden />
-            ) : (
-              <ChevronsLeft className="size-5" strokeWidth={2} aria-hidden />
-            )}
-          </button>
+        <div
+          className={cn(
+            "border-b border-white/10 transition-[padding] motion-reduce:transition-none",
+            collapsed ? "px-2 py-3" : "px-4 py-4",
+          )}
+          style={{
+            transitionDuration: expanderMs,
+            transitionTimingFunction: expanderEase,
+          }}
+        >
+          {collapsed ? (
+            <div className="flex justify-center" aria-hidden>
+              <span className="flex size-10 items-center justify-center rounded-[12px] bg-white/10 text-sm font-semibold text-white">
+                C
+              </span>
+            </div>
+          ) : (
+            <>
+              <p className="text-xs font-medium tracking-wide text-white/70 uppercase">
+                Quản trị
+              </p>
+              <p className="mt-1 text-lg font-semibold tracking-[-0.01em]">
+                Café Admin
+              </p>
+            </>
+          )}
         </div>
-      </div>
-    </aside>
+
+        <nav
+          className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden"
+          aria-label="Admin"
+        >
+          {collapsed ? (
+            <CollapsedRail items={visible} pathname={pathname} />
+          ) : (
+            <div className="p-2">
+              <ExpandedNavRows
+                items={visible}
+                pathname={pathname}
+                depth={0}
+                expandedIds={expandedIds}
+                toggleSection={toggleSection}
+              />
+            </div>
+          )}
+        </nav>
+
+        <div className="mt-auto border-t border-white/10 p-2">
+          <div
+            className={cn(
+              "flex items-center gap-2",
+              collapsed && "justify-center gap-0",
+            )}
+          >
+            {!collapsed ? (
+              <Link
+                href={clientRoutes.home}
+                className="flex min-w-0 flex-1 items-center gap-2 rounded-[12px] px-2 py-2 text-sm text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+                title="Về cửa hàng"
+              >
+                <span aria-hidden className="shrink-0 text-base">
+                  ←
+                </span>
+                <span className="truncate">Về cửa hàng</span>
+              </Link>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => setCollapsed((c) => !c)}
+              className="flex size-9 shrink-0 items-center justify-center rounded-[12px] border border-white/15 text-white/90 transition-colors hover:bg-white/10 hover:text-white"
+              aria-label={collapsed ? "Mở rộng sidebar" : "Thu gọn sidebar"}
+              title={collapsed ? "Mở rộng sidebar" : "Thu gọn sidebar"}
+            >
+              {collapsed ? (
+                <ChevronsRight className="size-5" strokeWidth={2} aria-hidden />
+              ) : (
+                <ChevronsLeft className="size-5" strokeWidth={2} aria-hidden />
+              )}
+            </button>
+          </div>
+        </div>
+      </Sidebar>
+    </SidebarProvider>
   );
 }

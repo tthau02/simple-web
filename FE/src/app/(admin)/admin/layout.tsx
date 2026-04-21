@@ -19,7 +19,7 @@ export default function AdminSectionLayout({
       <AdminSidebar />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <AdminHeader />
-        <div className="flex-1 overflow-auto p-4 md:p-6">{children}</div>
+        <div className="flex-1 overflow-auto p-3 md:p-4">{children}</div>
       </div>
     </div>
   );
