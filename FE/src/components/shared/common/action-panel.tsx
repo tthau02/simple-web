@@ -8,6 +8,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
@@ -21,12 +22,15 @@ export type ActionPanelProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
+  /** Nội dung chính (ví dụ form) giữa header/tabs và footer. */
+  children?: React.ReactNode;
   tabs?: ActionPanelTab[];
   activeTab?: string;
   onTabChange?: (value: string) => void;
   confirmLabel?: string;
   cancelLabel?: string;
-  onConfirm?: () => void;
+  /** Trả về `false` để giữ panel mở (ví dụ lỗi validate). */
+  onConfirm?: () => boolean | void;
   className?: string;
 };
 
@@ -34,6 +38,7 @@ export function ActionPanel({
   open,
   onOpenChange,
   title,
+  children,
   tabs,
   activeTab,
   onTabChange,
@@ -49,7 +54,7 @@ export function ActionPanel({
 
   return (
     <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className={cn("w-full max-w-[46rem]", className)}>
+      <DrawerContent className={cn("w-full max-w-184", className)}>
         <DrawerHeader className="gap-4 border-b border-black/8">
           <DrawerTitle>{title}</DrawerTitle>
         </DrawerHeader>
@@ -69,7 +74,14 @@ export function ActionPanel({
           </Tabs>
         ) : null}
 
-        <div className="flex-1" />
+        <div
+          className={cn(
+            "min-h-0 flex-1 overflow-y-auto px-4 py-3",
+            hasTabs ? "pt-0" : "pt-1",
+          )}
+        >
+          {children}
+        </div>
 
         <DrawerFooter className="border-t border-black/8">
           <div className="flex items-center justify-center gap-3">
@@ -86,7 +98,8 @@ export function ActionPanel({
               type="button"
               className="h-8 rounded-[50px] border border-[#00754A] bg-[#00754A] px-3.5 text-xs font-semibold tracking-[-0.01em] text-white transition-all duration-200 hover:border-[#006241] hover:bg-[#006241] active:scale-95"
               onClick={() => {
-                onConfirm?.();
+                const keepOpen = onConfirm?.() === false;
+                if (keepOpen) return;
                 onOpenChange(false);
               }}
             >

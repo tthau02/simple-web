@@ -7,11 +7,14 @@ import { cn } from "@/lib/utils";
 
 function Drawer({
   shouldScaleBackground = true,
+  /** Chỉ kéo đóng qua `Drawer.Handle`. Mặc định bật — không dùng Handle thì panel không kéo được, dễ chọn/copy chữ. */
+  handleOnly = true,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Root>) {
   return (
     <DrawerPrimitive.Root
       shouldScaleBackground={shouldScaleBackground}
+      handleOnly={handleOnly}
       {...props}
     />
   );
@@ -51,6 +54,7 @@ function DrawerOverlay({
 function DrawerContent({
   className,
   children,
+  style,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Content>) {
   return (
@@ -60,8 +64,14 @@ function DrawerContent({
         data-slot="drawer-content"
         className={cn(
           "fixed right-0 bottom-0 left-auto z-50 mt-24 flex h-[100dvh] w-full max-w-[28rem] flex-col rounded-l-[12px] border border-black/8 bg-white shadow-[0_0_0.5px_rgba(0,0,0,0.14),0_8px_24px_rgba(0,0,0,0.12)]",
+          "cursor-default select-text",
           className,
         )}
+        style={{
+          WebkitUserSelect: "text",
+          userSelect: "text",
+          ...style,
+        }}
         {...props}
       >
         {children}

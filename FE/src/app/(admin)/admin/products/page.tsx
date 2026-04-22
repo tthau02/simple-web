@@ -5,9 +5,14 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 
 import {
   ActionPanel,
+  CommonForm,
+  CommonFormItems,
   CommonHeader,
   CommonTable,
   CommonTableFilter,
+  getCommonFormRuleErrors,
+  type CommonFormItem,
+  type CommonFormSelectOption,
   type CommonHeaderProps,
   type CommonTableAction,
   type CommonTableColumn,
@@ -32,9 +37,198 @@ type ProductRow = {
 type ProductActionPanelState = {
   open: boolean;
   mode: "add" | "edit";
-  tab: string;
   editingRow: ProductRow | null;
 };
+
+type ProductFormDraft = {
+  sku: string;
+  name: string;
+  price: string;
+  stock: string;
+  status: string;
+  contactEmail: string;
+  /** ISO (từ date picker) hoặc rỗng */
+  saleDate: string;
+  /** ISO datetime (ô datetime-local) */
+  publishedAt: string;
+  /** URL hiện có hoặc file mới chọn */
+  coverImage: string | File | null;
+};
+
+const EMPTY_PRODUCT_DRAFT: ProductFormDraft = {
+  sku: "",
+  name: "",
+  price: "",
+  stock: "",
+  status: "Đang bán",
+  contactEmail: "",
+  saleDate: "",
+  publishedAt: "",
+  coverImage: null,
+};
+
+function productRowToDraft(row: ProductRow): ProductFormDraft {
+  return {
+    sku: row.sku,
+    name: row.name,
+    price: String(row.price),
+    stock: String(row.stock),
+    status: row.status,
+    contactEmail: row.contactEmail,
+    saleDate: "",
+    publishedAt: row.updatedAt,
+    coverImage: row.thumbnail,
+  };
+}
+
+function thumbnailFromForm(
+  cover: ProductFormDraft["coverImage"],
+  seed: string,
+): string {
+  if (cover instanceof File) return URL.createObjectURL(cover);
+  if (typeof cover === "string" && cover) return cover;
+  return `https://picsum.photos/seed/${encodeURIComponent(seed)}/96/96`;
+}
+
+const PRODUCT_STATUS_OPTIONS: CommonFormSelectOption[] = [
+  { value: "Đang bán", label: "Đang bán" },
+  { value: "Hết hàng", label: "Hết hàng" },
+  { value: "Nháp", label: "Nháp" },
+];
+
+/**
+ * Có thể trộn `row` / `col` ở top-level (không cần `section`) và `section` khi cần tiêu đề.
+ * `headerVariant: "plain"` gọn hơn `divided` khi block section nằm cạnh nhiều hàng thường.
+ */
+const PRODUCT_FORM_ITEMS: CommonFormItem<ProductFormDraft>[] = [
+  {
+    type: "row",
+    columnsClassName: "md:grid-cols-2",
+    children: [
+      {
+        type: "input",
+        name: "sku",
+        label: "SKU",
+        autoComplete: "off",
+        rules: { required: true, minLength: 1, maxLength: 100 },
+      },
+      {
+        type: "input",
+        name: "name",
+        label: "Tên sản phẩm",
+        rules: { required: true, maxLength: 200 },
+      },
+    ],
+  },
+  {
+    type: "row",
+    id: "price-stock",
+    columnsClassName: "md:grid-cols-2",
+    children: [
+      {
+        type: "number",
+        name: "price",
+        label: "Giá (VNĐ)",
+        placeholder: "Nhập giá (VNĐ)",
+        rules: { required: true, min: 0, max: 1_000_000_000_000 },
+      },
+      {
+        type: "number",
+        name: "stock",
+        label: "Tồn kho",
+        placeholder: "Nhập tồn kho",
+        rules: { required: true, min: 0, max: 999_999_999 },
+      },
+    ],
+  },
+  {
+    type: "row",
+    columnsClassName: "md:grid-cols-12",
+    className: "items-start",
+    children: [
+      {
+        type: "col",
+        span: 6,
+        children: [
+          {
+            type: "select",
+            name: "status",
+            label: "Trạng thái",
+            options: PRODUCT_STATUS_OPTIONS,
+            searchable: true,
+            searchPlaceholder: "Tìm trạng thái…",
+            rules: { required: true },
+          },
+        ],
+      },
+      {
+        type: "col",
+        span: 6,
+        children: [
+          {
+            type: "input",
+            name: "contactEmail",
+            label: "Email liên hệ",
+            inputType: "email",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    type: "section",
+    id: "section-dates-media",
+    as: "div",
+    title: "Lịch & ảnh",
+    headerVariant: "divided",
+    children: [
+      {
+        type: "row",
+        id: "dates-media",
+        columnsClassName: "md:grid-cols-12",
+        className: "items-start",
+        children: [
+          {
+            type: "col",
+            span: 4,
+            children: [
+              {
+                type: "date",
+                name: "saleDate",
+                label: "Ngày mở bán",
+                placeholder: "Chọn ngày",
+              },
+            ],
+          },
+          {
+            type: "col",
+            span: 4,
+            children: [
+              {
+                type: "datetime",
+                name: "publishedAt",
+                label: "Hiển thị từ",
+                placeholder: "Chọn ngày & giờ",
+              },
+            ],
+          },
+          {
+            type: "col",
+            span: 4,
+            children: [
+              {
+                type: "image",
+                name: "coverImage",
+                label: "Ảnh đại diện",
+                maxPreviewClassName: "max-h-44",
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+];
 
 const FAKE_PRODUCTS: ProductRow[] = [
   {
@@ -86,11 +280,11 @@ const FAKE_PRODUCTS: ProductRow[] = [
     updatedAt: "2026-04-17T16:45:00",
   },
   {
-    id: "4",
-    sku: "FD-CRO-010",
-    name: "Croissant bơ",
-    thumbnail: "https://picsum.photos/seed/cro/96/96",
-    detailPath: "/admin/products/4",
+    id: "6",
+    sku: "FD-CRO-010B",
+    name: "Croissant bơ (lô 2)",
+    thumbnail: "https://picsum.photos/seed/cro2/96/96",
+    detailPath: "/admin/products/6",
     price: 28000,
     stock: 30,
     status: "Nháp",
@@ -98,11 +292,11 @@ const FAKE_PRODUCTS: ProductRow[] = [
     updatedAt: "2026-04-17T16:45:00",
   },
   {
-    id: "4",
-    sku: "FD-CRO-010",
-    name: "Croissant bơ",
-    thumbnail: "https://picsum.photos/seed/cro/96/96",
-    detailPath: "/admin/products/4",
+    id: "7",
+    sku: "FD-CRO-010C",
+    name: "Croissant bơ (lô 3)",
+    thumbnail: "https://picsum.photos/seed/cro3/96/96",
+    detailPath: "/admin/products/7",
     price: 28000,
     stock: 30,
     status: "Nháp",
@@ -146,15 +340,20 @@ export default function AdminProductsPage() {
   const [filterValues, setFilterValues] = useState<TableFilterValues>(
     () => defaultFilterValues,
   );
+  const [products, setProducts] = useState<ProductRow[]>(FAKE_PRODUCTS);
   const [panelState, setPanelState] = useState<ProductActionPanelState>({
     open: false,
     mode: "add",
-    tab: "general",
     editingRow: null,
   });
+  const [productForm, setProductForm] =
+    useState<ProductFormDraft>(EMPTY_PRODUCT_DRAFT);
+  const [formErrors, setFormErrors] = useState<
+    Partial<Record<keyof ProductFormDraft, string>>
+  >({});
 
   const rows = useMemo(() => {
-    let list = [...FAKE_PRODUCTS];
+    let list = [...products];
 
     const q = String(filterValues.q ?? "")
       .trim()
@@ -191,7 +390,7 @@ export default function AdminProductsPage() {
       return list.sort((a, b) => compareRows(a, b, "price", "desc"));
     }
     return list.sort((a, b) => compareRows(a, b, k, sortDirection));
-  }, [sortKey, sortDirection, filterValues]);
+  }, [sortKey, sortDirection, filterValues, products]);
 
   const handleSearch = () => {
     console.info("[demo] search with filters", filterValues);
@@ -204,7 +403,68 @@ export default function AdminProductsPage() {
   };
 
   const openActionPanel = (mode: "add" | "edit", row: ProductRow | null) => {
-    setPanelState({ open: true, mode, tab: "general", editingRow: row });
+    setFormErrors({});
+    setProductForm(
+      mode === "edit" && row
+        ? productRowToDraft(row)
+        : { ...EMPTY_PRODUCT_DRAFT },
+    );
+    setPanelState({ open: true, mode, editingRow: row });
+  };
+
+  const handlePanelConfirm = (): boolean => {
+    const nextErrors = getCommonFormRuleErrors(PRODUCT_FORM_ITEMS, productForm);
+    setFormErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return false;
+
+    const price = Number(String(productForm.price).replace(/\D/g, "")) || 0;
+    const stock = Math.max(0, parseInt(String(productForm.stock), 10) || 0);
+    const sku = productForm.sku.trim();
+    const name = productForm.name.trim();
+
+    const now = new Date().toISOString();
+    const email = productForm.contactEmail.trim() || "order@example.com";
+
+    if (panelState.mode === "add") {
+      const id = crypto.randomUUID();
+      setProducts((prev) => [
+        ...prev,
+        {
+          id,
+          sku,
+          name,
+          thumbnail: `https://picsum.photos/seed/${encodeURIComponent(sku)}/96/96`,
+          detailPath: `/admin/products/${id}`,
+          price,
+          stock,
+          status: productForm.status,
+          contactEmail: email,
+          updatedAt: now,
+        },
+      ]);
+      return true;
+    }
+    if (panelState.editingRow) {
+      const id = panelState.editingRow.id;
+      setProducts((prev) =>
+        prev.map((r) =>
+          r.id === id
+            ? {
+                ...r,
+                sku,
+                name,
+                price,
+                stock,
+                status: productForm.status,
+                contactEmail: email,
+                updatedAt: now,
+              }
+            : r,
+        ),
+      );
+      return true;
+    }
+    return false;
   };
 
   const columns: CommonTableColumn<ProductRow>[] = [
@@ -243,11 +503,7 @@ export default function AdminProductsPage() {
       label: "Trạng thái",
       placeholder: "Tất cả",
       clearable: true,
-      options: [
-        { value: "Đang bán", label: "Đang bán" },
-        { value: "Hết hàng", label: "Hết hàng" },
-        { value: "Nháp", label: "Nháp" },
-      ],
+      options: PRODUCT_STATUS_OPTIONS,
     },
     {
       type: "date",
@@ -331,15 +587,42 @@ export default function AdminProductsPage() {
 
       <ActionPanel
         open={panelState.open}
-        onOpenChange={(open) => setPanelState((prev) => ({ ...prev, open }))}
+        onOpenChange={(open) => {
+          setPanelState((prev) => ({ ...prev, open }));
+          if (!open) setFormErrors({});
+        }}
         title={panelState.mode === "add" ? "Thêm sản phẩm" : "Sửa sản phẩm"}
-        tabs={[
-          { value: "general", label: "Thông tin" },
-          { value: "settings", label: "Thiết lập" },
-        ]}
-        activeTab={panelState.tab}
-        onTabChange={(tab) => setPanelState((prev) => ({ ...prev, tab }))}
-      />
+        onConfirm={handlePanelConfirm}
+      >
+        <CommonForm
+          id="admin-product-form"
+          className="min-w-0"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (handlePanelConfirm() === false) return;
+            setPanelState((p) => ({ ...p, open: false }));
+          }}
+        >
+          <CommonFormItems
+            idPrefix="admin-product"
+            items={PRODUCT_FORM_ITEMS}
+            values={productForm}
+            errors={formErrors}
+            onValuesChange={(patch) => {
+              setProductForm((f) => ({ ...f, ...patch }));
+              setFormErrors((prev) => {
+                const next = { ...prev };
+                for (const k of Object.keys(
+                  patch,
+                ) as (keyof ProductFormDraft)[]) {
+                  delete next[k];
+                }
+                return next;
+              });
+            }}
+          />
+        </CommonForm>
+      </ActionPanel>
     </div>
   );
 }
