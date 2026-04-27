@@ -2,7 +2,7 @@ namespace SimpleApi.Domain.Entities;
 
 public abstract class BaseEntity
 {
-    public Guid Id { get; set; }
+    public long Id { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
     public string? CreatedBy { get; set; }

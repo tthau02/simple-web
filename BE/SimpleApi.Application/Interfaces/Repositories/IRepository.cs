@@ -6,12 +6,12 @@ namespace SimpleApi.Application.Interfaces.Repositories;
 public interface IRepository<T>
     where T : BaseEntity
 {
-    Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<T?> GetByIdAsync(long id, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken = default);
 
     Task<PagedResult<T>> GetPagedAsync(
-        PagedRequest request,
+        IPagedRequest request,
         IReadOnlyCollection<string>? allowedSortProperties = null,
         CancellationToken cancellationToken = default);
 
