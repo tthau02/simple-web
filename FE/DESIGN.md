@@ -505,3 +505,48 @@ When refining existing screens generated with this design system:
 - Form error-state full styling (red border weight, icon placement) visible on the tint token but not exhaustively extracted
 - Careers-page specific components (cup-name card, search radio grid) are referenced in token names but not covered by this extraction
 - Starbucks Visa Card / Starbucks-Card (SVC) detailed mockup specs are hinted at by `--svcRoundedCorners` and `--svcShadowFilter` tokens but not fully documented
+
+## 10. Frontend — Tailwind & shared classes (`ds-*`)
+
+Implementations mirror tokens in `:root` inside `FE/src/app/globals.css` (e.g. `--text-primary`, `--brand-cta`, `--page-canvas`). **Reuse these instead of pasting long `className` strings**—especially across auth flows and storefront-style panels.
+
+### CSS variables added for UI
+
+| Token | Role |
+| --- | --- |
+| `--semantic-error` | DESIGN.md destructive red `#c82014` for field errors |
+
+Typography on the site: **`html` uses `font-sans`** (loaded app font) and **`letter-spacing: -0.01em`** globally. Component classes do not repeat tracking unless needed (e.g. uppercase labels).
+
+### Component layer (prefix `ds-`)
+
+Declared in **`globals.css`** under `@layer components`.
+
+| Class | Use |
+| --- | --- |
+| `ds-text-body` | Primary text color on light surfaces |
+| `ds-text-muted` | Secondary / metadata (`--text-secondary`) |
+| `ds-text-error` | Error color only |
+| `ds-field-error` | Inline validation message (`text-sm`) |
+| `ds-field-error-sm` | Dense forms (`text-xs`) |
+| `ds-text-overline` | Uppercase micro label row (forms) |
+| `ds-auth-greeting` | Auth “Hello,” line (`text-lg`) |
+| `ds-auth-title` | Auth `<h1>` (1.6rem → **1.8rem** at `sm`; single scale for login + register) |
+| `ds-auth-footer` | Muted footer line under form + centered on mobile |
+| `ds-link-brand` | Accent link (`--brand-cta`) |
+| `ds-link-heading` | Brand heading green link (`--brand-heading`) |
+| `ds-auth-view` | Auth column shell (viewport + flex) |
+| `ds-auth-view-clip` | Add when the column must not overflow (e.g. register grid) |
+| `ds-auth-form-login` | Login form stack (margins / gaps) |
+| `ds-auth-form-register` | Register form stack |
+| `ds-auth-tools-row` | Remember-me + secondary link row |
+| `ds-auth-checkbox-label` | Label next to checkbox on auth |
+| `ds-auth-store-row` | App Store / Play badge row (`pt-6`) |
+| `ds-auth-store-row-compact` | **Compose with** `ds-auth-store-row`; sets `pt-4` instead of `pt-6` |
+| `ds-auth-input` | Underline input (bottom border; focus `--brand-cta`) |
+| `ds-btn-primary-pill` | Full-width primary pill (50px radius, hover `--brand-heading`, `active:scale-95`) |
+| `ds-checkbox-brand` | Checkbox checked state mapped to `--brand-cta` |
+| `ds-store-badge` | Black rectangular “store” chip |
+| `ds-surface-card-elevated` | White card + 12px radius + DESIGN card shadow |
+
+**Adding new primitives:** Prefer a new `ds-*` class in `globals.css` backed by `:root` tokens above; avoid one-off hex values unless the token is documented here first.

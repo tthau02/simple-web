@@ -12,6 +12,8 @@ const adminRoot = `/${ROUTE_SEGMENTS.admin}`;
 /** Public / client-facing paths */
 export const clientRoutes = {
   home: "/",
+  login: "/login",
+  register: "/register",
   // menu: "/menu",
   // rewards: "/rewards",
 } as const;
@@ -21,6 +23,7 @@ export const adminRoutes = {
   home: adminRoot,
   orders: `${adminRoot}/orders`,
   products: `${adminRoot}/products`,
+  users: `${adminRoot}/users`,
   settings: `${adminRoot}/settings`,
 } as const;
 

@@ -95,6 +95,14 @@ export interface CommonTableAction<T> {
   variant?: "default" | "outline" | "ghost" | "destructive";
 }
 
+/** Typography đồng nhất giữa th và td (DESIGN.md — body nhỏ, tracking như globals). */
+const tableThClass =
+  "text-sm font-normal tracking-[-0.01em] text-(--text-secondary)";
+const tableTdClass =
+  "text-sm font-normal tracking-[-0.01em] text-(--text-primary)";
+const tableTdMutedClass =
+  "text-sm font-normal tracking-[-0.01em] text-(--text-secondary)";
+
 /** Cố định — dropdown phân trang chỉ 25 / 50 / 100 (shadcn Select) */
 const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
 
@@ -236,7 +244,7 @@ function formatByType<T>(
       return (
         <a
           href={`mailto:${addr}`}
-          className="text-[var(--brand-heading)] underline-offset-2 hover:underline"
+          className="text-(--brand-heading) underline-offset-2 hover:underline font-normal"
         >
           {addr}
         </a>
@@ -253,7 +261,7 @@ function formatByType<T>(
         if (!href || display === "—") return "—";
         const external = column.linkExternal ?? isExternalHref(href);
         const className = cn(
-          "max-w-[14rem] truncate font-medium text-[var(--brand-heading)] underline-offset-2 hover:underline",
+          "max-w-[14rem] truncate font-normal text-(--brand-heading) underline-offset-2 hover:underline",
         );
         if (external) {
           return (
@@ -301,7 +309,7 @@ function formatByType<T>(
       const external =
         column.linkExternal ?? externalFromValue ?? isExternalHref(href);
       const className = cn(
-        "max-w-[14rem] truncate font-medium text-[var(--brand-heading)] underline-offset-2 hover:underline",
+        "max-w-[14rem] truncate font-normal text-(--brand-heading) underline-offset-2 hover:underline",
       );
 
       if (external) {
@@ -394,8 +402,8 @@ function SortButton({
     <button
       type="button"
       className={cn(
-        "-ml-1 inline-flex items-center gap-1 rounded-md px-1 py-0.5 text-left text-sm font-semibold uppercase tracking-[0.06em] text-[var(--text-secondary)] transition-colors hover:bg-black/[0.04] hover:text-[var(--text-primary)]",
-        active && "text-[var(--brand-heading)]",
+        "-ml-1 inline-flex items-center gap-1 rounded-md px-1 py-0.5 text-left text-sm font-normal tracking-[-0.01em] text-(--text-secondary) transition-colors hover:bg-black/[0.04] hover:text-(--text-primary)",
+        active && "text-(--brand-heading)",
       )}
       onClick={() => {
         if (!onSortChange) return;
@@ -729,15 +737,21 @@ export function CommonTable<T>({
             <TableHeader className="sticky top-0 z-30 bg-white">
               <TableRow className="border-black/[0.06] hover:bg-transparent">
                 {showStt ? (
-                  <TableHead className="sticky top-0 left-0 z-30 w-[1%] min-w-[3.25rem] bg-white text-center text-xs font-semibold uppercase tracking-[0.06em] text-[var(--text-secondary)] shadow-[6px_0_12px_-4px_rgba(0,0,0,0.08)]">
-                    <span className="font-semibold">{sttHeaderLabel}</span>
+                  <TableHead
+                    className={cn(
+                      "sticky top-0 left-0 z-30 w-[1%] min-w-[3.25rem] bg-white text-center shadow-[6px_0_12px_-4px_rgba(0,0,0,0.08)]",
+                      tableThClass,
+                    )}
+                  >
+                    {sttHeaderLabel}
                   </TableHead>
                 ) : null}
                 {columns.map((col) => (
                   <TableHead
                     key={String(col.id)}
                     className={cn(
-                      "sticky top-0 z-20 bg-white text-xs font-semibold uppercase tracking-[0.06em] text-[var(--text-secondary)]",
+                      "sticky top-0 z-20 bg-white",
+                      tableThClass,
                       col.headerClassName,
                     )}
                   >
@@ -750,18 +764,19 @@ export function CommonTable<T>({
                         onSortChange={onSortChange}
                       />
                     ) : (
-                      <span className="font-semibold">{col.label}</span>
+                      col.label
                     )}
                   </TableHead>
                 ))}
                 {actionList ? (
                   <TableHead
                     className={cn(
-                      "sticky top-0 right-0 z-50 w-[1%] min-w-[6.5rem] whitespace-nowrap bg-white text-right text-xs font-semibold uppercase tracking-[0.06em] text-[var(--text-secondary)] shadow-[-8px_0_16px_-6px_rgba(0,0,0,0.12)]",
+                      "sticky top-0 right-0 z-50 w-[1%] min-w-[6.5rem] whitespace-nowrap bg-white text-right shadow-[-8px_0_16px_-6px_rgba(0,0,0,0.12)]",
+                      tableThClass,
                       actionsHeaderClassName,
                     )}
                   >
-                    <span className="font-semibold">{actionsLabel}</span>
+                    {actionsLabel}
                   </TableHead>
                 ) : null}
               </TableRow>
@@ -787,17 +802,19 @@ export function CommonTable<T>({
                       className="border-black/[0.06]"
                     >
                       {showStt ? (
-                        <TableCell className="sticky left-0 z-20 w-[1%] min-w-[3.25rem] bg-white text-center text-sm tabular-nums tracking-[-0.01em] text-[var(--text-secondary)] shadow-[6px_0_12px_-4px_rgba(0,0,0,0.08)]">
+                        <TableCell
+                          className={cn(
+                            "sticky left-0 z-20 w-[1%] min-w-[3.25rem] bg-white text-center tabular-nums shadow-[6px_0_12px_-4px_rgba(0,0,0,0.08)]",
+                            tableTdMutedClass,
+                          )}
+                        >
                           {stt}
                         </TableCell>
                       ) : null}
                       {columns.map((col) => (
                         <TableCell
                           key={String(col.id)}
-                          className={cn(
-                            "text-sm tracking-[-0.01em] text-[var(--text-primary)]",
-                            col.className,
-                          )}
+                          className={cn(tableTdClass, col.className)}
                         >
                           {formatByType(row, col)}
                         </TableCell>
@@ -805,7 +822,8 @@ export function CommonTable<T>({
                       {actionList ? (
                         <TableCell
                           className={cn(
-                            "sticky right-0 z-40 min-w-[6.5rem] bg-white text-sm text-[var(--text-primary)] shadow-[-8px_0_16px_-6px_rgba(0,0,0,0.12)]",
+                            "sticky right-0 z-40 min-w-[6.5rem] bg-white shadow-[-8px_0_16px_-6px_rgba(0,0,0,0.12)]",
+                            tableTdClass,
                             actionsCellClassName,
                           )}
                         >

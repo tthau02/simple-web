@@ -2,10 +2,10 @@ import type { LucideIcon } from "lucide-react";
 import {
   ClipboardList,
   LayoutDashboard,
-  ListIcon,
   Package,
   Settings,
   ShoppingCart,
+  Users,
 } from "lucide-react";
 import { adminRoutes } from "@/config/routes";
 
@@ -102,6 +102,13 @@ export const adminNavTree: AdminNavItem[] = [
         href: adminRoutes.products,
         icon: Package,
         permissions: ["products.read"],
+      },
+      {
+        id: "users",
+        label: "Người dùng",
+        href: adminRoutes.users,
+        icon: Users,
+        permissions: ["users.read"],
       },
     ],
   },

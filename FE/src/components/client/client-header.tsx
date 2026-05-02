@@ -39,13 +39,13 @@ export function ClientHeader() {
             Tìm cửa hàng
           </Link>
           <Link
-            href="#"
+            href={clientRoutes.login}
             className="rounded-[50px] border border-[var(--text-primary)] px-3 py-1.5 text-sm font-semibold tracking-[-0.01em] text-[var(--text-primary)] transition-transform active:scale-[0.95] sm:px-4"
           >
             Đăng nhập
           </Link>
           <Link
-            href="#"
+            href={clientRoutes.register}
             className="rounded-[50px] bg-black px-3 py-1.5 text-sm font-semibold tracking-[-0.01em] text-white transition-transform active:scale-[0.95] sm:px-4"
           >
             Tham gia
