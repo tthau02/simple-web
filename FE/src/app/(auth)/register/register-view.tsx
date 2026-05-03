@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { clientRoutes } from "@/config/routes";
 import { useRegisterMutation } from "@/hooks/api";
 import { ApiError } from "@/lib/api-client";
-import { showToast } from "@/lib/toast";
+import { toast } from "sonner";
 
 type FormState = {
   userName: string;
@@ -31,9 +31,9 @@ function empty(): FormState {
 
 export function RegisterView() {
   const [values, setValues] = useState<FormState>(() => empty());
-  const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>(
-    {},
-  );
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof FormState, string>>
+  >({});
 
   const registerMutation = useRegisterMutation();
 
@@ -63,11 +63,8 @@ export function RegisterView() {
       },
       {
         onSuccess: () => {
-          showToast({
-            type: "success",
-            title: "Đăng ký thành công",
-            message: "Bạn có thể chuyển sang trang đăng nhập.",
-            color: "success",
+          toast.success("Đăng ký thành công", {
+            description: "Bạn có thể chuyển sang trang đăng nhập.",
           });
           setValues(empty());
           setErrors({});
@@ -75,12 +72,7 @@ export function RegisterView() {
         onError: (err) => {
           const message =
             err instanceof ApiError ? err.message : "Đăng ký thất bại.";
-          showToast({
-            type: "error",
-            title: "Đăng ký thất bại",
-            message,
-            color: "destructive",
-          });
+          toast.error("Đăng ký thất bại", { description: message });
         },
       },
     );

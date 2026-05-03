@@ -37,14 +37,13 @@ const actionVariantClass: Record<
   string
 > = {
   default:
-    "border border-[#00754A] bg-[#00754A] text-white hover:bg-[#006241] hover:border-[#006241]",
-  outline: "border border-[#00754A] bg-white text-[#00754A] hover:bg-[#f2f0eb]",
+    "border-primary bg-primary text-primary-foreground hover:border-[var(--brand-heading)] hover:bg-[var(--brand-heading)]",
+  outline: "border-primary bg-card text-primary hover:bg-accent",
   secondary:
-    "border border-black/12 bg-[#f9f9f9] text-[rgba(0,0,0,0.87)] hover:bg-[#edebe9]",
-  ghost:
-    "border border-transparent bg-transparent text-[#00754A] hover:bg-[#f2f0eb]",
+    "border-border bg-muted text-foreground hover:bg-secondary",
+  ghost: "border-transparent bg-transparent text-primary hover:bg-accent",
   destructive:
-    "border border-[#c82014] bg-white text-[#c82014] hover:bg-red-50",
+    "border-destructive bg-card text-destructive hover:bg-destructive/10 dark:hover:bg-destructive/15",
 };
 
 /**
@@ -64,14 +63,14 @@ export function CommonHeader(props: CommonHeaderProps) {
       <div className="min-w-0 flex-1 flex items-baseline gap-2">
         <h2
           className={cn(
-            "text-base font-semibold tracking-[-0.01em] text-[var(--text-primary)] md:text-lg",
+            "text-base font-semibold tracking-[-0.01em] text-foreground md:text-lg",
           )}
         >
           {title}
         </h2>
 
         {subtitle ? (
-          <p className="text-[13px] font-medium tracking-[0.05em] text-[var(--text-secondary)] opacity-80">
+          <p className="text-[13px] font-medium tracking-[0.05em] text-muted-foreground opacity-90">
             {subtitle}
           </p>
         ) : null}

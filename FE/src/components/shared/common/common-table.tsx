@@ -48,6 +48,28 @@ export type CommonColumnType =
 
 export type SortDirection = "asc" | "desc";
 
+/**
+ * Class trong `globals.css` (`.badge-light-*`) — dùng với `CommonTableColumn.badgeMapping`.
+ * Tương tự enum Angular `STATUS_BADGE_CLASSES`.
+ */
+export enum STATUS_BADGE_CLASSES {
+  SUCCESS = "badge-light-success",
+  WARNING = "badge-light-warning",
+  DANGER = "badge-light-danger",
+  INFO = "badge-light-info",
+  SECONDARY = "badge-light-secondary",
+  PRIMARY = "badge-light-primary",
+  LIGHT = "badge-light",
+  DARK = "badge-light-dark",
+}
+
+/** Một dòng map: `key` khớp `Object.is` với `row[column.id]` → `text` + `badgeClass`. */
+export type CommonTableBadgeMappingEntry = {
+  key: unknown;
+  text: string;
+  badgeClass: STATUS_BADGE_CLASSES | string;
+};
+
 /** Giá trị ô kiểu `link`: chuỗi URL hoặc href + nhãn */
 export type LinkCellValue =
   | string
@@ -82,6 +104,12 @@ export interface CommonTableColumn<T> {
   /** `img`: alt từ field khác */
   imageAltKey?: Extract<keyof T, string>;
   imageClassName?: string;
+
+  /**
+   * `badge`: ánh xạ giá trị ô → nhãn + class theme (`STATUS_BADGE_CLASSES`).
+   * Có `badgeMapping` thì bỏ qua hiển thị chuỗi thô từ API.
+   */
+  badgeMapping?: ReadonlyArray<CommonTableBadgeMappingEntry>;
 }
 
 export interface CommonTableAction<T> {
@@ -95,13 +123,19 @@ export interface CommonTableAction<T> {
   variant?: "default" | "outline" | "ghost" | "destructive";
 }
 
-/** Typography đồng nhất giữa th và td (DESIGN.md — body nhỏ, tracking như globals). */
+/** Typography đồng nhất giữa th và td — token theme. */
 const tableThClass =
-  "text-sm font-normal tracking-[-0.01em] text-(--text-secondary)";
+  "text-sm font-normal tracking-[-0.01em] text-muted-foreground";
 const tableTdClass =
-  "text-sm font-normal tracking-[-0.01em] text-(--text-primary)";
+  "text-sm font-normal tracking-[-0.01em] text-foreground";
 const tableTdMutedClass =
-  "text-sm font-normal tracking-[-0.01em] text-(--text-secondary)";
+  "text-sm font-normal tracking-[-0.01em] text-muted-foreground";
+
+/** Cột / ô sticky: nền card + bóng nhẹ (dark đậm hơn). */
+const stickyCellShadowLeft =
+  "shadow-[6px_0_12px_-4px_rgba(0,0,0,0.08)] dark:shadow-[6px_0_12px_-4px_rgba(0,0,0,0.55)]";
+const stickyCellShadowRight =
+  "shadow-[-8px_0_16px_-6px_rgba(0,0,0,0.12)] dark:shadow-[-8px_0_16px_-6px_rgba(0,0,0,0.55)]";
 
 /** Cố định — dropdown phân trang chỉ 25 / 50 / 100 (shadcn Select) */
 const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
@@ -190,6 +224,16 @@ function isExternalHref(href: string) {
   return /^https?:\/\//i.test(href);
 }
 
+/** `datetime` trong bảng: dd/MM/yyyy HH:mm (giờ địa phương). */
+function formatTableDateTimeDdMmYyyy(d: Date): string {
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = String(d.getFullYear());
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mi = String(d.getMinutes()).padStart(2, "0");
+  return `${dd}/${mm}/${yyyy} ${hh}:${mi}`;
+}
+
 function formatByType<T>(
   row: T,
   column: CommonTableColumn<T>,
@@ -221,18 +265,12 @@ function formatByType<T>(
       return "—";
     case "datetime":
       if (raw instanceof Date)
-        return raw.toLocaleString("vi-VN", {
-          dateStyle: "short",
-          timeStyle: "short",
-        });
+        return Number.isNaN(raw.getTime())
+          ? "—"
+          : formatTableDateTimeDdMmYyyy(raw);
       if (typeof raw === "string" || typeof raw === "number") {
         const d = new Date(raw);
-        return Number.isNaN(d.getTime())
-          ? "—"
-          : d.toLocaleString("vi-VN", {
-              dateStyle: "short",
-              timeStyle: "short",
-            });
+        return Number.isNaN(d.getTime()) ? "—" : formatTableDateTimeDdMmYyyy(d);
       }
       return "—";
     case "boolean":
@@ -244,7 +282,7 @@ function formatByType<T>(
       return (
         <a
           href={`mailto:${addr}`}
-          className="text-(--brand-heading) underline-offset-2 hover:underline font-normal"
+          className="font-normal text-brand-heading underline-offset-2 hover:underline"
         >
           {addr}
         </a>
@@ -261,7 +299,7 @@ function formatByType<T>(
         if (!href || display === "—") return "—";
         const external = column.linkExternal ?? isExternalHref(href);
         const className = cn(
-          "max-w-[14rem] truncate font-normal text-(--brand-heading) underline-offset-2 hover:underline",
+          "max-w-[14rem] truncate font-normal text-brand-heading underline-offset-2 hover:underline",
         );
         if (external) {
           return (
@@ -309,7 +347,7 @@ function formatByType<T>(
       const external =
         column.linkExternal ?? externalFromValue ?? isExternalHref(href);
       const className = cn(
-        "max-w-[14rem] truncate font-normal text-(--brand-heading) underline-offset-2 hover:underline",
+        "max-w-[14rem] truncate font-normal text-brand-heading underline-offset-2 hover:underline",
       );
 
       if (external) {
@@ -356,7 +394,7 @@ function formatByType<T>(
           src={src}
           alt={alt || ""}
           className={cn(
-            "rounded-[10px] border border-black/[0.06] bg-[#f9f9f9] object-cover",
+            "rounded-[10px] border border-border bg-muted object-cover",
             imageSizeClass[size],
             column.imageClassName,
           )}
@@ -364,12 +402,22 @@ function formatByType<T>(
       );
     }
     case "badge": {
+      const mapping = column.badgeMapping;
+      if (mapping?.length) {
+        const hit = mapping.find((e) => Object.is(e.key, raw));
+        if (!hit) return "—";
+        return (
+          <span className={cn(hit.badgeClass)}>
+            <span className="truncate">{hit.text}</span>
+          </span>
+        );
+      }
       const s = raw != null ? String(raw) : "";
       if (!s) return "—";
       return (
         <span
           className={cn(
-            "inline-flex max-w-full items-center rounded-full border border-black/[0.06] bg-[#f9f9f9] px-2.5 py-0.5 text-xs font-medium tracking-[-0.01em] text-[var(--text-primary)]",
+            "inline-flex max-w-full items-center rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-medium tracking-[-0.01em] text-foreground",
           )}
         >
           <span className="truncate">{s}</span>
@@ -402,8 +450,8 @@ function SortButton({
     <button
       type="button"
       className={cn(
-        "-ml-1 inline-flex items-center gap-1 rounded-md px-1 py-0.5 text-left text-sm font-normal tracking-[-0.01em] text-(--text-secondary) transition-colors hover:bg-black/[0.04] hover:text-(--text-primary)",
-        active && "text-(--brand-heading)",
+        "-ml-1 inline-flex items-center gap-1 rounded-md px-1 py-0.5 text-left text-sm font-normal tracking-[-0.01em] text-muted-foreground transition-colors hover:bg-muted/90 hover:text-foreground",
+        active && "text-brand-heading",
       )}
       onClick={() => {
         if (!onSortChange) return;
@@ -427,7 +475,7 @@ function SortButton({
 }
 
 const menuItemClass =
-  "flex w-full items-center gap-2 rounded-[10px] px-3 py-2 text-left text-sm tracking-[-0.01em] text-[var(--text-primary)] transition-colors hover:bg-[#f9f9f9]";
+  "flex w-full items-center gap-2 rounded-[10px] px-3 py-2 text-left text-sm tracking-[-0.01em] text-foreground transition-colors hover:bg-muted";
 
 /** z-index cao + portal để không bị cắt bởi overflow của khung bảng */
 const FLOATING_MENU_Z = 9999;
@@ -529,7 +577,7 @@ function ActionsMenuCell<T>({
           left: "auto",
           zIndex: FLOATING_MENU_Z,
         }}
-        className="min-w-[12rem] rounded-[12px] border border-black/[0.08] bg-white py-1.5 shadow-[0_0_0.5px_rgba(0,0,0,0.14),0_8px_24px_rgba(0,0,0,0.12)]"
+        className="min-w-[12rem] rounded-[12px] border border-border bg-popover py-1.5 text-popover-foreground shadow-lg dark:shadow-black/40"
       >
         {actions.map((action) => {
           const disabled = action.disabled?.(row) ?? false;
@@ -560,7 +608,7 @@ function ActionsMenuCell<T>({
                   rel="noopener noreferrer"
                   className={cn(
                     menuItemClass,
-                    destructive && "text-[#c82014] hover:bg-red-50",
+                    destructive && "text-destructive hover:bg-destructive/10",
                   )}
                   onClick={() => setOpen(false)}
                 >
@@ -575,7 +623,7 @@ function ActionsMenuCell<T>({
                 href={href}
                 className={cn(
                   menuItemClass,
-                  destructive && "text-[#c82014] hover:bg-red-50",
+                  destructive && "text-destructive hover:bg-destructive/10",
                 )}
                 onClick={() => setOpen(false)}
               >
@@ -592,7 +640,7 @@ function ActionsMenuCell<T>({
               disabled={disabled}
               className={cn(
                 menuItemClass,
-                destructive && "text-[#c82014] hover:bg-red-50",
+                destructive && "text-destructive hover:bg-destructive/10",
                 disabled && "pointer-events-none opacity-50",
               )}
               onClick={() => {
@@ -616,8 +664,8 @@ function ActionsMenuCell<T>({
         ref={triggerRef}
         type="button"
         className={cn(
-          "flex size-8 shrink-0 items-center justify-center rounded-[12px] text-[var(--text-primary)] transition-colors hover:bg-[#f9f9f9]",
-          open && "bg-[#f9f9f9]",
+          "flex size-8 shrink-0 items-center justify-center rounded-[12px] text-foreground transition-colors hover:bg-muted",
+          open && "bg-muted",
         )}
         aria-expanded={open}
         aria-haspopup="menu"
@@ -705,20 +753,20 @@ export function CommonTable<T>({
       className={cn(
         "flex h-full min-h-[24rem] max-h-[min(100dvh,920px)] flex-col overflow-hidden",
         embed
-          ? "w-full pt-4 pb-0 overflow-hidden rounded-[12px] border border-black/8 bg-white shadow-[0px_0px_0.5px_0px_rgba(0,0,0,0.14),0px_1px_1px_0px_rgba(0,0,0,0.24)]"
-          : "rounded-[12px] border border-black/[0.08] bg-white shadow-[0px_0px_0.5px_0px_rgba(0,0,0,0.14),0px_1px_1px_0px_rgba(0,0,0,0.24)]",
+          ? "w-full overflow-hidden rounded-[12px] border border-border bg-card pt-4 pb-0 text-card-foreground shadow-sm dark:shadow-black/35"
+          : "rounded-[12px] border border-border bg-card text-card-foreground shadow-sm dark:shadow-black/35",
         className,
       )}
     >
       {title?.trim() || description?.trim() ? (
-        <div className="border-b border-black/[0.06] px-4 py-4 md:px-6 md:py-5">
+        <div className="border-b border-border px-4 py-4 md:px-6 md:py-5">
           {title?.trim() ? (
-            <h2 className="text-base font-semibold tracking-[-0.01em] text-[var(--text-primary)] md:text-lg">
+            <h2 className="text-base font-semibold tracking-[-0.01em] text-foreground md:text-lg">
               {title}
             </h2>
           ) : null}
           {description?.trim() ? (
-            <p className="mt-1 text-sm tracking-[-0.01em] text-[var(--text-secondary)]">
+            <p className="mt-1 text-sm tracking-[-0.01em] text-muted-foreground">
               {description}
             </p>
           ) : null}
@@ -734,12 +782,13 @@ export function CommonTable<T>({
       >
         <ScrollArea className="h-full w-full">
           <Table className={cn("min-w-[640px]", tableClassName)}>
-            <TableHeader className="sticky top-0 z-30 bg-white">
-              <TableRow className="border-black/[0.06] hover:bg-transparent">
+            <TableHeader className="sticky top-0 z-30 bg-card">
+              <TableRow className="border-border hover:bg-transparent">
                 {showStt ? (
                   <TableHead
                     className={cn(
-                      "sticky top-0 left-0 z-30 w-[1%] min-w-[3.25rem] bg-white text-center shadow-[6px_0_12px_-4px_rgba(0,0,0,0.08)]",
+                      "sticky top-0 left-0 z-30 w-[1%] min-w-[3.25rem] bg-card text-center",
+                      stickyCellShadowLeft,
                       tableThClass,
                     )}
                   >
@@ -750,7 +799,7 @@ export function CommonTable<T>({
                   <TableHead
                     key={String(col.id)}
                     className={cn(
-                      "sticky top-0 z-20 bg-white",
+                      "sticky top-0 z-20 bg-card",
                       tableThClass,
                       col.headerClassName,
                     )}
@@ -771,7 +820,8 @@ export function CommonTable<T>({
                 {actionList ? (
                   <TableHead
                     className={cn(
-                      "sticky top-0 right-0 z-50 w-[1%] min-w-[6.5rem] whitespace-nowrap bg-white text-right shadow-[-8px_0_16px_-6px_rgba(0,0,0,0.12)]",
+                      "sticky top-0 right-0 z-50 w-[1%] min-w-[6.5rem] whitespace-nowrap bg-card text-right",
+                      stickyCellShadowRight,
                       tableThClass,
                       actionsHeaderClassName,
                     )}
@@ -786,7 +836,7 @@ export function CommonTable<T>({
                 <TableRow className="hover:bg-transparent">
                   <TableCell
                     colSpan={colSpan}
-                    className="h-24 text-center text-sm text-[var(--text-secondary)]"
+                    className="h-24 text-center text-sm text-muted-foreground"
                   >
                     {emptyMessage}
                   </TableCell>
@@ -799,12 +849,13 @@ export function CommonTable<T>({
                   return (
                     <TableRow
                       key={getRowKey(row, index)}
-                      className="border-black/[0.06]"
+                      className="border-border"
                     >
                       {showStt ? (
                         <TableCell
                           className={cn(
-                            "sticky left-0 z-20 w-[1%] min-w-[3.25rem] bg-white text-center tabular-nums shadow-[6px_0_12px_-4px_rgba(0,0,0,0.08)]",
+                            "sticky left-0 z-20 w-[1%] min-w-[3.25rem] bg-card text-center tabular-nums",
+                            stickyCellShadowLeft,
                             tableTdMutedClass,
                           )}
                         >
@@ -822,7 +873,8 @@ export function CommonTable<T>({
                       {actionList ? (
                         <TableCell
                           className={cn(
-                            "sticky right-0 z-40 min-w-[6.5rem] bg-white shadow-[-8px_0_16px_-6px_rgba(0,0,0,0.12)]",
+                            "sticky right-0 z-40 min-w-[6.5rem] bg-card",
+                            stickyCellShadowRight,
                             tableTdClass,
                             actionsCellClassName,
                           )}
@@ -841,9 +893,9 @@ export function CommonTable<T>({
       </div>
 
       {paginationEnabled && total > 0 ? (
-        <footer className="border-t border-black/[0.06] px-4 py-4 md:px-6">
+        <footer className="border-t border-border px-4 py-4 md:px-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
-            <p className="shrink-0 text-sm tracking-[-0.01em] text-[var(--text-secondary)]">
+            <p className="shrink-0 text-sm tracking-[-0.01em] text-muted-foreground">
               Tổng số {total} bản ghi
             </p>
             <div className="flex min-w-0 flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-end sm:gap-4">
@@ -854,7 +906,7 @@ export function CommonTable<T>({
                 >
                   <SelectTrigger
                     size="sm"
-                    className="h-8 w-[4.75rem] shrink-0 rounded-md border-black/[0.12] bg-white px-2.5 font-medium tabular-nums text-[var(--text-primary)] shadow-none hover:bg-[#f9f9f9]"
+                    className="h-8 w-[4.75rem] shrink-0 rounded-md border-input bg-card px-2.5 font-medium tabular-nums text-foreground shadow-none hover:bg-muted"
                   >
                     <SelectValue />
                   </SelectTrigger>
@@ -862,7 +914,7 @@ export function CommonTable<T>({
                     align="end"
                     sideOffset={6}
                     alignItemWithTrigger={false}
-                    className="!min-w-0 w-(--anchor-width) border-black/[0.08] p-1 shadow-[0_0_0.5px_rgba(0,0,0,0.14),0_8px_24px_rgba(0,0,0,0.12)]"
+                    className="!min-w-0 w-(--anchor-width) border-border bg-popover p-1 text-popover-foreground shadow-lg dark:shadow-black/40"
                   >
                     {PAGE_SIZE_OPTIONS.map((n) => (
                       <SelectItem
@@ -886,7 +938,7 @@ export function CommonTable<T>({
                       href="#"
                       text=""
                       className={cn(
-                        "h-8 gap-1 rounded-md border-black/[0.12] bg-white px-2 sm:pl-2",
+                        "h-8 gap-1 rounded-md border-input bg-card px-2 sm:pl-2",
                         page <= 1 && "pointer-events-none opacity-40",
                       )}
                       onClick={(e) => {
@@ -907,7 +959,7 @@ export function CommonTable<T>({
                           href="#"
                           size="icon"
                           isActive={page === item}
-                          className="size-8 rounded-md border-black/[0.08] font-medium tabular-nums"
+                          className="size-8 rounded-md border-border bg-card font-medium tabular-nums"
                           onClick={(e) => {
                             e.preventDefault();
                             setPage(item);
@@ -923,7 +975,7 @@ export function CommonTable<T>({
                       href="#"
                       text=""
                       className={cn(
-                        "h-8 gap-1 rounded-md border-black/[0.12] bg-white px-2 sm:pr-2",
+                        "h-8 gap-1 rounded-md border-input bg-card px-2 sm:pr-2",
                         page >= pageCount && "pointer-events-none opacity-40",
                       )}
                       onClick={(e) => {

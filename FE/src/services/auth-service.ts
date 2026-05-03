@@ -6,7 +6,7 @@ import type {
   User,
 } from "@/types/auth";
 
-const AUTH_BASE = "/api/auth";
+const AUTH_BASE = "/v1/api/Auth";
 
 export const authService = {
   login(payload: LoginRequest): Promise<LoginResponse> {

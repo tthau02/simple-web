@@ -7,7 +7,7 @@ public abstract class PagedAndSortedRequest : IPagedRequest
 {
     public const int DefaultPage = 1;
     public const int DefaultPageSize = 20;
-    public const int MaxPageSize = 100;
+    public const int MaxPageSize = 500;
 
     public int Page { get; init; } = DefaultPage;
     public int PageSize { get; init; } = DefaultPageSize;

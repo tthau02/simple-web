@@ -8,7 +8,6 @@ using SimpleApi.Application.Validators;
 
 namespace SimpleApi.Controllers;
 
-[Route("api/[controller]")]
 [Authorize]
 public sealed class UsersController : BaseController
 {
@@ -20,12 +19,12 @@ public sealed class UsersController : BaseController
     }
 
     [HttpGet("search")]
-    public async Task<ActionResult<ApiResponse<PagedResult<UserDto>>>> Search(
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<UserDto>>>> Search(
         [FromQuery] UserSearchRequest request,
         CancellationToken cancellationToken)
     {
         var page = await _users.GetPagedAsync(request, cancellationToken);
-        return OkResponse(page);
+        return OkResponse(page.Items);
     }
 
     [HttpGet("{id:long}")]

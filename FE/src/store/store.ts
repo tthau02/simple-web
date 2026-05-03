@@ -1,10 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
+import themeReducer from "./slices/theme-slice";
 import uiReducer from "./slices/ui-slice";
 
 export function makeStore() {
   return configureStore({
     reducer: {
       ui: uiReducer,
+      theme: themeReducer,
     },
   });
 }

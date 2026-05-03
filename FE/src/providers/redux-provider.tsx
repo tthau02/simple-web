@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { Provider } from "react-redux";
+import { ThemePersistence } from "@/providers/theme-persistence";
 import { makeStore } from "@/store/store";
 
 export function ReduxProvider({ children }: { children: React.ReactNode }) {
@@ -9,5 +10,10 @@ export function ReduxProvider({ children }: { children: React.ReactNode }) {
   if (!storeRef.current) {
     storeRef.current = makeStore();
   }
-  return <Provider store={storeRef.current}>{children}</Provider>;
+  return (
+    <Provider store={storeRef.current}>
+      <ThemePersistence />
+      {children}
+    </Provider>
+  );
 }

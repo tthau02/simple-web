@@ -44,7 +44,7 @@ builder.Services.AddSwaggerGen(options =>
     const string bearerScheme = "Bearer";
     options.AddSecurityDefinition(bearerScheme, new OpenApiSecurityScheme
     {
-        Description = "JWT: dán access token (đăng nhập /api/auth/login). Chỉ dán token, không gõ thêm chữ Bearer.",
+        Description = "JWT: dán access token (đăng nhập /v1/api/Auth/login). Chỉ dán token, không gõ thêm chữ Bearer.",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.Http,
@@ -115,14 +115,19 @@ if (app.Environment.IsDevelopment())
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-if (!string.Equals(Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER"), "true", StringComparison.OrdinalIgnoreCase))
-{
-    app.UseHttpsRedirection();
-}
-
+// CORS must run before HTTPS redirection; redirecting OPTIONS breaks browser preflight (307).
 if (corsOrigins.Length > 0)
 {
     app.UseCors();
+}
+
+var runningInContainer = string.Equals(
+    Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER"),
+    "true",
+    StringComparison.OrdinalIgnoreCase);
+if (!runningInContainer && !app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
 }
 
 app.UseAuthentication();

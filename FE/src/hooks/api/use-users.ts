@@ -12,11 +12,10 @@ import { userService } from "@/services/user-service";
 import type { User } from "@/types/auth";
 import type {
   UserCreateOrEditRequest,
-  UserPagedResult,
   UserSearchParams,
 } from "@/types/users";
 
-type UserListOptions = Omit<UseQueryOptions<UserPagedResult>, "queryKey" | "queryFn">;
+type UserListOptions = Omit<UseQueryOptions<User[]>, "queryKey" | "queryFn">;
 
 export function useUsersQuery(
   params: UserSearchParams,

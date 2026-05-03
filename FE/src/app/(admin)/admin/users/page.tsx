@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 
 import {
   CommonHeader,
   CommonTable,
   CommonTableFilter,
+  STATUS_BADGE_CLASSES,
   type CommonHeaderProps,
   type CommonTableAction,
   type CommonTableColumn,
@@ -16,11 +17,8 @@ import {
 } from "@/components/shared/common";
 import { CreateOrEditUserPanel } from "./create-or-edit-user-panel";
 import { ApiError } from "@/lib/api-client";
-import { showToast } from "@/lib/toast";
-import {
-  useDeleteUserMutation,
-  useUsersQuery,
-} from "@/hooks/api";
+import { toast } from "sonner";
+import { useDeleteUserMutation, useUsersQuery } from "@/hooks/api";
 import type { User } from "@/types/auth";
 import type { UserSearchParams } from "@/types/users";
 
@@ -68,7 +66,7 @@ export default function AdminUsersPage() {
     return {
       page: 1,
       pageSize: 200,
-      sortedBy: sortKey ?? "createdAt",
+      sortBy: sortKey ?? "createdAt",
       isDesc: sortDirection !== "asc",
       userName: q || undefined,
       fullName: q || undefined,
@@ -88,7 +86,7 @@ export default function AdminUsersPage() {
   const deleteMutation = useDeleteUserMutation(token);
 
   const rows = useMemo<UserRow[]>(() => {
-    const list = usersQuery.data?.items ?? [];
+    const list = usersQuery.data ?? [];
     return list.map((u) => ({ ...u, detailPath: `/admin/users/${u.id}` }));
   }, [usersQuery.data]);
 
@@ -107,7 +105,24 @@ export default function AdminUsersPage() {
     },
     { id: "email", label: "Email", type: "email", sortable: true },
     { id: "phoneNumber", label: "SĐT", type: "text" },
-    { id: "status", label: "Trạng thái", type: "boolean", sortable: true },
+    {
+      id: "status",
+      label: "Trạng thái",
+      type: "badge",
+      sortable: true,
+      badgeMapping: [
+        {
+          key: true,
+          badgeClass: STATUS_BADGE_CLASSES.SUCCESS,
+          text: "Đang hoạt động",
+        },
+        {
+          key: false,
+          badgeClass: STATUS_BADGE_CLASSES.DANGER,
+          text: "Bị khóa",
+        },
+      ],
+    },
     { id: "createdAt", label: "Tạo lúc", type: "datetime", sortable: true },
   ];
 
@@ -116,7 +131,7 @@ export default function AdminUsersPage() {
       type: "input",
       id: "q",
       label: "Tìm kiếm",
-      placeholder: "UserName hoặc Họ tên",
+      placeholder: "Tên đăng nhập hoặc Họ tên",
     },
     {
       type: "select",
@@ -163,22 +178,14 @@ export default function AdminUsersPage() {
         if (!window.confirm(`Xóa người dùng "${row.userName}"?`)) return;
         deleteMutation.mutate(row.id, {
           onSuccess: () => {
-            showToast({
-              type: "success",
-              title: "Đã xóa người dùng",
-              message: row.userName,
-              color: "success",
+            toast.success("Đã xóa người dùng", {
+              description: row.userName,
             });
           },
           onError: (err) => {
             const message =
               err instanceof ApiError ? err.message : "Không thể xóa.";
-            showToast({
-              type: "error",
-              title: "Xóa thất bại",
-              message,
-              color: "destructive",
-            });
+            toast.error("Xóa thất bại", { description: message });
           },
         });
       },
@@ -192,21 +199,19 @@ export default function AdminUsersPage() {
         ? "Không thể tải danh sách người dùng."
         : null;
 
+  useEffect(() => {
+    if (!loadError) return;
+    toast.error("Không tải được danh sách người dùng", {
+      id: "admin-users-load-error",
+      description: loadError,
+      duration: 10_000,
+    });
+  }, [loadError]);
+
   return (
     <div className="flex min-h-0 flex-col gap-4">
       <CommonHeader {...pageHeader} />
 
-      {!token ? (
-        <div className="rounded-[12px] border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          Chưa có access token trong localStorage (`accessToken` / `token` /
-          `authToken`). Hãy đăng nhập trước khi CRUD người dùng.
-        </div>
-      ) : null}
-      {loadError ? (
-        <div className="rounded-[12px] border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
-          {loadError}
-        </div>
-      ) : null}
       <div className="flex min-h-0 flex-col gap-4 lg:flex-row">
         <aside className="shrink-0 lg:w-72 lg:max-h-[min(100dvh,920px)] lg:overflow-y-auto xl:w-80">
           <CommonTableFilter
@@ -232,8 +237,9 @@ export default function AdminUsersPage() {
               setSortDirection(direction);
             }}
             actions={actions}
-            pagination={false}
-            emptyMessage={usersQuery.isLoading ? "Đang tải dữ liệu..." : "Không có dữ liệu."}
+            emptyMessage={
+              usersQuery.isLoading ? "Đang tải dữ liệu..." : "Không có dữ liệu."
+            }
           />
         </div>
       </div>

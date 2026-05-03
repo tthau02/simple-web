@@ -1,4 +1,12 @@
-const base = process.env.NEXT_PUBLIC_API_URL ?? "";
+function resolveApiBase(): string {
+  const raw = process.env.NEXT_PUBLIC_API_URL?.trim() ?? "";
+  if (raw) return raw.replace(/\/$/, "");
+  // Relative paths hit the Next origin (e.g. :3000); default BE dev port when env missing.
+  if (process.env.NODE_ENV === "development") return "http://localhost:8080";
+  return "";
+}
+
+const base = resolveApiBase();
 
 export type QueryValue = string | number | boolean | null | undefined;
 export type QueryParams = Record<string, QueryValue>;
@@ -45,7 +53,7 @@ function appendQuery(path: string, query?: QueryParams): string {
 
 export function apiUrl(path: string): string {
   if (!path.startsWith("/")) path = `/${path}`;
-  return `${base.replace(/\/$/, "")}${path}`;
+  return `${base}${path}`;
 }
 
 export async function apiFetch<T>(

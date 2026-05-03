@@ -38,13 +38,13 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 
-/** Viền + nền + focus (dùng chung, không gắn chiều cao). */
+/** Viền + nền + focus — token theme (muted/input/primary/destructive). */
 const commonFormSurfaceClassName =
-  "rounded-[12px] border border-black/10 bg-[#f9f9f9] " +
-  "text-sm text-[rgba(0,0,0,0.87)] " +
-  "placeholder:text-sm placeholder:font-normal placeholder:text-[rgba(0,0,0,0.58)] " +
-  "focus-visible:border-[#00754A] focus-visible:ring-3 focus-visible:ring-[#00754A]/20 " +
-  "aria-invalid:border-[#c82014] aria-invalid:ring-3 aria-invalid:ring-[#c82014]/20 " +
+  "rounded-[12px] border border-input bg-muted " +
+  "text-sm text-foreground " +
+  "placeholder:text-sm placeholder:font-normal placeholder:text-muted-foreground " +
+  "focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-ring/50 " +
+  "aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/25 " +
   "disabled:cursor-not-allowed disabled:opacity-50";
 
 /**
@@ -63,20 +63,20 @@ export const commonFormTextareaClassName = cn(
 );
 
 /** Icon cùng kích thước ở trigger (lịch, mũi tên, ảnh…). */
-const formFieldInlineIconClass = "size-4 shrink-0 text-[rgba(0,0,0,0.58)]";
+const formFieldInlineIconClass = "size-4 shrink-0 text-muted-foreground";
 
 const labelTextClass =
-  "w-full min-w-0 max-w-full cursor-text select-text text-sm font-medium leading-snug tracking-[-0.01em] text-[rgba(0,0,0,0.87)]";
+  "w-full min-w-0 max-w-full cursor-text select-text text-sm font-medium leading-snug tracking-[-0.01em] text-foreground";
 const descTextClass =
-  "select-text text-sm leading-snug text-[rgba(0,0,0,0.58)]";
+  "select-text text-sm leading-snug text-muted-foreground";
 /** Lỗi validate: chữ nhỏ hơn mô tả thường */
 const fieldErrorTextClass = "text-xs font-normal leading-snug text-destructive";
 
 const formTriggerValueClass = cn(
   "min-w-0 flex-1 truncate text-left text-sm font-normal leading-none",
-  "text-[rgba(0,0,0,0.87)]",
+  "text-foreground",
 );
-const formTriggerPlaceholderClass = "text-[rgba(0,0,0,0.58)]";
+const formTriggerPlaceholderClass = "text-muted-foreground";
 
 export type CommonFormSelectOption = { value: string; label: string };
 
@@ -163,6 +163,12 @@ export type CommonFormFieldRules<
   emailFormatMessage?: string;
   /** Thêm bước kiểm tra tùy ý; trả về thông điệp lỗi hoặc `undefined` nếu hợp lệ (chạy sau các quy tắc trên) */
   validate?: (value: unknown, allValues: T) => string | undefined;
+};
+
+/** Map giá trị field → nhãn cạnh `switch` (`Object.is`). */
+export type CommonFormSwitchMappingEntry = {
+  key: unknown;
+  text: string;
 };
 
 type CommonFormFieldBase<T extends Record<string, unknown>> = {
@@ -399,6 +405,10 @@ export type CommonFormFieldConfig<T extends Record<string, unknown>> =
     })
   | (CommonFormFieldBase<T> & {
       type: "switch";
+      /** Map `values[name]` → nhãn hiển thị cạnh switch (`Object.is`). */
+      switchMapping?: ReadonlyArray<CommonFormSwitchMappingEntry>;
+      /** Class cho hàng gồm switch + nhãn */
+      switchRowClassName?: string;
     })
   | (CommonFormFieldBase<T> & {
       type: "date";
@@ -655,17 +665,17 @@ function FormNodeRenderer<T extends Record<string, unknown>>({
           <header
             className={cn(
               "space-y-1",
-              headerKind === "divided" && "border-b border-black/8 pb-2.5",
+              headerKind === "divided" && "border-b border-border pb-2.5",
               headerKind === "plain" && "pt-0.5",
             )}
           >
             {node.title != null && node.title !== "" ? (
               <h3
                 className={cn(
-                  "tracking-[-0.01em] text-[rgba(0,0,0,0.87)]",
+                  "tracking-[-0.01em] text-foreground",
                   headerKind === "divided" && "text-sm font-semibold",
                   headerKind === "plain" &&
-                    "text-xs font-semibold uppercase text-[rgba(0,0,0,0.5)]",
+                    "text-xs font-semibold text-muted-foreground uppercase",
                 )}
               >
                 {node.title}
@@ -674,7 +684,7 @@ function FormNodeRenderer<T extends Record<string, unknown>>({
             {node.description ? (
               <p
                 className={cn(
-                  "text-[rgba(0,0,0,0.58)]",
+                  "text-muted-foreground",
                   headerKind === "divided" &&
                     "text-sm font-normal leading-snug",
                   headerKind === "plain" && "text-xs font-normal leading-snug",
@@ -739,7 +749,10 @@ type FormSelectFieldProps<T extends Record<string, unknown>> = {
   fieldShell: (control: React.ReactNode) => React.ReactNode;
 };
 
-/** Select dạng Popover (hoạt động trong Drawer); căn theo @/components/ui/select + tìm kiếm tùy chọn. */
+/**
+ * Select trong form: Popover + danh sách option (nút) — cùng pattern với select có ô tìm,
+ * hoạt động ổn trong Drawer; hover/focus giống filter bảng.
+ */
 function FormSelectField<T extends Record<string, unknown>>({
   id,
   field,
@@ -748,9 +761,9 @@ function FormSelectField<T extends Record<string, unknown>>({
   error,
   fieldShell,
 }: FormSelectFieldProps<T>) {
+  const searchable = field.searchable === true;
   const [open, setOpen] = React.useState(false);
   const [q, setQ] = React.useState("");
-  const searchable = field.searchable === true;
 
   React.useEffect(() => {
     if (!open) setQ("");
@@ -781,7 +794,9 @@ function FormSelectField<T extends Record<string, unknown>>({
         disabled={field.disabled}
         className={cn(
           "flex w-full min-w-0 max-w-full items-center justify-between gap-2 text-sm",
-          "outline-none transition-colors select-none",
+          "outline-none transition-colors duration-200 select-none",
+          "enabled:hover:border-primary/40 enabled:hover:bg-accent",
+          "enabled:focus-visible:border-primary enabled:focus-visible:ring-3 enabled:focus-visible:ring-ring/50",
           commonFormControlClassName,
           field.className,
         )}
@@ -813,34 +828,37 @@ function FormSelectField<T extends Record<string, unknown>>({
         sideOffset={4}
         className={cn(
           "w-(--anchor-width)! max-w-[min(100vw-1.5rem,24rem)]! gap-0! p-0!",
-          "min-w-36 overflow-hidden border-0 bg-popover",
-          "shadow-md ring-1 ring-foreground/10",
+          "min-w-36 overflow-hidden border-0 bg-popover text-popover-foreground",
+          "shadow-md ring-1 ring-border",
         )}
       >
-        <div
-          className={cn(
-            "border-b border-black/8 bg-[#f9f9f9] px-2 py-1.5",
-            !searchable && "hidden",
-            field.searchClassName,
-          )}
-          data-form-select-search={searchable ? "on" : "off"}
+        {searchable ? (
+          <div
+            className={cn(
+              "border-b border-border bg-muted px-2 py-1.5",
+              field.searchClassName,
+            )}
+            data-form-select-search="on"
+          >
+            <Input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder={field.searchPlaceholder ?? "Tìm kiếm…"}
+              className={cn(commonFormControlClassName)}
+              autoComplete="off"
+              disabled={field.disabled}
+              onKeyDown={(e) => e.stopPropagation()}
+            />
+          </div>
+        ) : null}
+        <ScrollArea
+          className={cn("max-h-[min(50vh,16rem)]", searchable && "h-48")}
         >
-          <Input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder={field.searchPlaceholder ?? "Tìm kiếm…"}
-            className={cn(commonFormControlClassName)}
-            autoComplete="off"
-            disabled={field.disabled}
-            onKeyDown={(e) => e.stopPropagation()}
-          />
-        </div>
-        <ScrollArea className="h-48 max-h-[min(50vh,16rem)]">
           <ul className="p-1.5" role="listbox" aria-label={field.label}>
             {filtered.length === 0 ? (
               <li
                 className={cn(
-                  "px-2.5 py-2 text-sm font-normal text-[rgba(0,0,0,0.58)]",
+                  "px-2.5 py-2 text-sm font-normal text-muted-foreground",
                 )}
               >
                 Không có mục phù hợp
@@ -849,17 +867,18 @@ function FormSelectField<T extends Record<string, unknown>>({
               filtered.map((opt) => {
                 const selected = str === opt.value;
                 return (
-                  <li key={opt.value} role="presentation">
+                  <li key={opt.value || "__empty"} role="presentation">
                     <button
                       type="button"
                       role="option"
                       aria-selected={selected}
                       className={cn(
-                        "relative flex w-full min-w-0 cursor-default items-center gap-2 rounded-[10px] py-2 pr-8 pl-2.5",
-                        "text-left text-sm font-normal text-[rgba(0,0,0,0.87)]",
-                        "outline-none select-none focus:bg-accent focus:text-accent-foreground",
-                        "hover:bg-accent/80",
-                        selected && "bg-primary/10",
+                        "relative flex w-full min-w-0 cursor-pointer items-center gap-2 rounded-[10px] py-2 pr-8 pl-2.5",
+                        "text-left text-sm font-normal text-foreground",
+                        "outline-none transition-colors duration-150 select-none",
+                        "hover:bg-accent focus-visible:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 focus-visible:outline-none",
+                        selected &&
+                          "bg-primary/10 font-medium text-foreground ring-1 ring-primary/20",
                       )}
                       onClick={() => {
                         set(opt.value as T[Extract<keyof T, string>]);
@@ -964,7 +983,7 @@ function FormImageField<T extends Record<string, unknown>>({
           className={cn(
             commonFormControlClassName,
             "inline-flex h-9 min-w-0 w-auto! max-w-none flex-1 items-center justify-center gap-2",
-            "text-sm font-medium text-[rgba(0,0,0,0.87)] hover:bg-[#edebe9] active:scale-95",
+            "text-sm font-medium text-foreground hover:bg-secondary active:scale-95",
           )}
         >
           <ImageIcon className={formFieldInlineIconClass} aria-hidden />
@@ -974,7 +993,7 @@ function FormImageField<T extends Record<string, unknown>>({
           <Button
             type="button"
             variant="ghost"
-            className="h-9 min-w-0 shrink-0 px-2.5 text-sm font-medium text-[#c82014] hover:text-[#a61b0e]"
+            className="h-9 min-w-0 shrink-0 px-2.5 text-sm font-medium text-destructive hover:text-destructive/90"
             disabled={field.disabled}
             onClick={() => set(null as T[Extract<keyof T, string>])}
           >
@@ -985,7 +1004,7 @@ function FormImageField<T extends Record<string, unknown>>({
       {preview ? (
         <div
           className={cn(
-            "min-h-0 w-full overflow-hidden rounded-[12px] border border-black/8 bg-white",
+            "min-h-0 w-full overflow-hidden rounded-[12px] border border-border bg-card",
             field.maxPreviewClassName,
           )}
         >
@@ -1033,7 +1052,7 @@ function FormFieldLabelRow({
           aria-label="Bắt buộc"
         >
           <Asterisk
-            className="size-3 shrink-0 self-center text-[#df5e55]"
+            className="size-3 shrink-0 self-center text-destructive"
             aria-hidden
             strokeWidth={2.5}
           />
@@ -1100,7 +1119,10 @@ function FormFieldBlock<T extends Record<string, unknown>>({
 
   if (field.type === "switch") {
     const checked = Boolean(v);
-    return fieldShell(
+    const mapping = field.switchMapping;
+    const mappedLabel = mapping?.find((e) => Object.is(e.key, checked))?.text;
+    const statusId = mappedLabel ? `${id}-switch-status` : undefined;
+    const switchEl = (
       <Switch
         id={id}
         size="default"
@@ -1110,11 +1132,38 @@ function FormFieldBlock<T extends Record<string, unknown>>({
         className={field.className}
         aria-invalid={error ? "true" : undefined}
         aria-describedby={
-          [field.description && `${id}-description`, error && `${id}-error`]
+          [
+            statusId,
+            field.description && `${id}-description`,
+            error && `${id}-error`,
+          ]
             .filter(Boolean)
             .join(" ") || undefined
         }
-      />,
+      />
+    );
+    return fieldShell(
+      mapping?.length ? (
+        <div
+          className={cn(
+            "flex flex-row flex-wrap items-center gap-3",
+            field.switchRowClassName,
+          )}
+        >
+          {switchEl}
+          {mappedLabel ? (
+            <span
+              id={statusId}
+              className="min-w-0 text-sm font-normal tracking-[-0.01em] text-muted-foreground"
+              aria-live="polite"
+            >
+              {mappedLabel}
+            </span>
+          ) : null}
+        </div>
+      ) : (
+        switchEl
+      ),
     );
   }
 
@@ -1296,8 +1345,8 @@ function FormFieldBlock<T extends Record<string, unknown>>({
             }}
             disabled={field.disabled}
           />
-          <div className="flex min-h-9 w-full min-w-0 items-center gap-2 border-t border-black/8 p-2.5">
-            <span className="w-8 shrink-0 text-sm font-medium leading-none text-[rgba(0,0,0,0.58)]">
+          <div className="flex min-h-9 w-full min-w-0 items-center gap-2 border-t border-border p-2.5">
+            <span className="w-8 shrink-0 text-sm font-medium leading-none text-muted-foreground">
               Giờ
             </span>
             <Input
@@ -1501,9 +1550,12 @@ export function CommonFormSelectField({
 }: CommonFormSelectFieldProps) {
   const isControlled = value !== undefined;
 
+  const items = options.map((o) => ({ value: o.value, label: o.label }));
+
   const select = (
     <Select
       modal={false}
+      items={items}
       value={
         isControlled
           ? value != null && value !== ""
@@ -1528,7 +1580,7 @@ export function CommonFormSelectField({
       >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent className="bg-[#f9f9f9]">
+      <SelectContent className="bg-popover text-popover-foreground">
         {options.map((opt) => (
           <SelectItem key={opt.value} value={opt.value}>
             {opt.label}

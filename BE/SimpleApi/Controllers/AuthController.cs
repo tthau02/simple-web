@@ -6,7 +6,6 @@ using SimpleApi.Application.Interfaces.Services;
 
 namespace SimpleApi.Controllers;
 
-[Route("api/[controller]")]
 public sealed class AuthController : BaseController
 {
     private readonly IUserService _users;

@@ -175,7 +175,7 @@ export function CommonTableFilter({
   return (
     <div
       className={cn(
-        "flex h-auto min-h-[24rem] max-h-[min(100dvh,920px)] min-w-0 flex-col gap-4 self-start rounded-[12px] border border-black/8 bg-white p-4 shadow-[0px_0px_0.5px_0px_rgba(0,0,0,0.14),0px_1px_1px_0px_rgba(0,0,0,0.24)] md:p-5",
+        "flex h-auto min-h-[24rem] max-h-[min(100dvh,920px)] min-w-0 flex-col gap-4 self-start rounded-[12px] border border-border bg-card p-4 text-card-foreground shadow-sm md:p-5 dark:shadow-black/35",
         className,
       )}
     >
@@ -200,7 +200,7 @@ export function CommonTableFilter({
         </FieldSet>
       </div>
       {toolbarPosition === "bottom" || onSubmit || onReset ? (
-        <div className="border-t border-black/8 pt-3">
+        <div className="border-t border-border pt-3">
           {toolbarPosition === "bottom" ? toolbarNode : null}
           {onSubmit || onReset ? (
             <div className="mt-3 flex min-h-8 flex-wrap items-center gap-2.5">
@@ -208,7 +208,7 @@ export function CommonTableFilter({
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-8 w-8 rounded-[50px] border-[#00754A] p-0 text-[#00754A] transition-all duration-200 hover:bg-[#f2f0eb] active:scale-95"
+                  className="h-8 w-8 rounded-[50px] border-primary p-0 text-primary transition-all duration-200 hover:bg-accent active:scale-95"
                   onClick={onReset}
                   aria-label={resetLabel}
                   title={resetLabel}
@@ -219,7 +219,7 @@ export function CommonTableFilter({
               {onSubmit ? (
                 <Button
                   type="button"
-                  className="h-8 rounded-[50px] border border-[#00754A] bg-[#00754A] px-3 text-xs text-white transition-all duration-200 hover:border-[#006241] hover:bg-[#006241] active:scale-95"
+                  className="h-8 rounded-[50px] border border-primary bg-primary px-3 text-xs text-primary-foreground transition-all duration-200 hover:border-[var(--brand-heading)] hover:bg-[var(--brand-heading)] active:scale-95"
                   onClick={onSubmit}
                 >
                   <Search className="size-3.5" aria-hidden />
@@ -272,13 +272,18 @@ function FilterFieldRow({
         field.clearable === true
           ? [{ value: "", label: clearLabel }, ...field.options]
           : field.options;
+      const items = opts.map((o) => ({ value: o.value, label: o.label }));
       const raw = values[field.id];
       const v = typeof raw === "string" ? raw : "";
       return (
         <Field>
           <FieldLabel htmlFor={field.id}>{field.label}</FieldLabel>
           <FieldContent>
-            <Select value={v} onValueChange={(next) => patch(field.id, next)}>
+            <Select
+              value={v}
+              items={items}
+              onValueChange={(next) => patch(field.id, next)}
+            >
               <SelectTrigger id={field.id} className="w-full min-w-0">
                 <SelectValue placeholder={field.placeholder ?? "Chọn…"} />
               </SelectTrigger>
@@ -457,8 +462,8 @@ function FilterFieldRow({
                 isReset && "w-8 p-0",
                 !isReset && "w-full min-h-8",
                 isOutline
-                  ? "border border-[#00754A] bg-white text-[#00754A] hover:bg-[#f2f0eb]"
-                  : "border border-[#00754A] bg-[#00754A] text-white hover:border-[#006241] hover:bg-[#006241]",
+                  ? "border border-primary bg-card text-primary hover:bg-accent"
+                  : "border border-primary bg-primary text-primary-foreground hover:border-[var(--brand-heading)] hover:bg-[var(--brand-heading)]",
               )}
               onClick={field.onClick}
               aria-label={field.label}

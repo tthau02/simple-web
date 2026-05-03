@@ -2,15 +2,14 @@ import { apiFetch } from "@/lib/api-client";
 import type { User } from "@/types/auth";
 import type {
   UserCreateOrEditRequest,
-  UserPagedResult,
   UserSearchParams,
 } from "@/types/users";
 
-const USERS_BASE = "/api/users";
+const USERS_BASE = "/v1/api/Users";
 
 export const userService = {
-  search(params: UserSearchParams, token?: string): Promise<UserPagedResult> {
-    return apiFetch<UserPagedResult>(`${USERS_BASE}/search`, {
+  search(params: UserSearchParams, token?: string): Promise<User[]> {
+    return apiFetch<User[]>(`${USERS_BASE}/search`, {
       method: "GET",
       query: params,
       token,

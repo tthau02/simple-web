@@ -75,7 +75,7 @@ function ExpandedNavRows({
     <div
       className={cn(
         "flex flex-col gap-0.5",
-        depth > 0 && "ml-1 border-l border-white/15 pl-2",
+        depth > 0 && "ml-1 border-l border-[var(--text-on-dark)]/15 pl-2",
       )}
     >
       {items.map((item) => {
@@ -93,8 +93,8 @@ function ExpandedNavRows({
                       rowLink,
                       "min-w-0 flex-1",
                       isAdminNavHrefActive(pathname, item.href) || branchActive
-                        ? "bg-white/15 font-medium text-white"
-                        : "text-white/80 hover:bg-white/10 hover:text-white",
+                        ? "bg-[var(--text-on-dark)]/15 font-medium text-[var(--text-on-dark)]"
+                        : "text-[var(--text-on-dark-muted)] hover:bg-[var(--text-on-dark)]/10 hover:text-[var(--text-on-dark)]",
                     )}
                   >
                     <item.icon
@@ -111,8 +111,8 @@ function ExpandedNavRows({
                       rowLink,
                       "flex-1 text-left",
                       branchActive
-                        ? "bg-white/10 text-white"
-                        : "text-white/80 hover:bg-white/10 hover:text-white",
+                        ? "bg-[var(--text-on-dark)]/10 text-[var(--text-on-dark)]"
+                        : "text-[var(--text-on-dark-muted)] hover:bg-[var(--text-on-dark)]/10 hover:text-[var(--text-on-dark)]",
                     )}
                   >
                     <item.icon
@@ -141,8 +141,8 @@ function ExpandedNavRows({
                     type="button"
                     onClick={() => toggleSection(item.id)}
                     className={cn(
-                      "flex w-9 shrink-0 items-center justify-center rounded-[12px] text-white/80 transition-colors hover:bg-white/10 hover:text-white",
-                      branchActive && "text-white",
+                      "flex w-9 shrink-0 items-center justify-center rounded-[12px] text-[var(--text-on-dark-muted)] transition-colors hover:bg-[var(--text-on-dark)]/10 hover:text-[var(--text-on-dark)]",
+                      branchActive && "text-[var(--text-on-dark)]",
                     )}
                     aria-expanded={open}
                     aria-label={open ? "Thu gọn nhóm" : "Mở rộng nhóm"}
@@ -193,8 +193,8 @@ function ExpandedNavRows({
             className={cn(
               rowLink,
               active
-                ? "bg-white/15 font-medium text-white"
-                : "text-white/80 hover:bg-white/10 hover:text-white",
+                ? "bg-[var(--text-on-dark)]/15 font-medium text-[var(--text-on-dark)]"
+                : "text-[var(--text-on-dark-muted)] hover:bg-[var(--text-on-dark)]/10 hover:text-[var(--text-on-dark)]",
             )}
           >
             <item.icon className="size-4 shrink-0 opacity-90" aria-hidden />
@@ -235,9 +235,9 @@ function CollapsedRail({
                 type="button"
                 onClick={() => setFlyoutId(open ? null : item.id)}
                 className={cn(
-                  "flex size-10 items-center justify-center rounded-[12px] text-white/85 transition-colors hover:bg-white/10 hover:text-white",
+                  "flex size-10 items-center justify-center rounded-[12px] text-[var(--text-on-dark-muted)] transition-colors hover:bg-[var(--text-on-dark)]/10 hover:text-[var(--text-on-dark)]",
                   isAdminNavBranchActive(item, pathname) &&
-                    "bg-white/15 text-white",
+                    "bg-[var(--text-on-dark)]/15 text-[var(--text-on-dark)]",
                 )}
                 title={item.label}
                 aria-expanded={open}
@@ -246,10 +246,10 @@ function CollapsedRail({
               </button>
               {open && (
                 <div
-                  className="absolute top-0 left-full z-50 ml-2 min-w-[12.5rem] rounded-[12px] border border-white/10 bg-[var(--brand-house)] py-2 shadow-[0_0_0.5px_rgba(0,0,0,0.14),0_8px_24px_rgba(0,0,0,0.18)]"
+                  className="absolute top-0 left-full z-50 ml-2 min-w-[12.5rem] rounded-[12px] border border-[var(--text-on-dark)]/12 bg-[var(--brand-house)] py-2 shadow-[0_0_0.5px_rgba(0,0,0,0.14),0_8px_24px_rgba(0,0,0,0.18)]"
                   role="menu"
                 >
-                  <p className="border-b border-white/10 px-3 pb-2 text-xs font-semibold tracking-wide text-white/70 uppercase">
+                  <p className="border-b border-[var(--text-on-dark)]/12 px-3 pb-2 text-xs font-semibold tracking-wide text-[var(--text-on-dark-muted)] uppercase">
                     {item.label}
                   </p>
                   <div className="flex flex-col gap-0.5 p-1">
@@ -264,8 +264,8 @@ function CollapsedRail({
                           className={cn(
                             "flex items-center gap-2 rounded-[12px] px-3 py-2 text-sm tracking-[-0.01em]",
                             active
-                              ? "bg-white/15 font-medium text-white"
-                              : "text-white/85 hover:bg-white/10 hover:text-white",
+                              ? "bg-[var(--text-on-dark)]/15 font-medium text-[var(--text-on-dark)]"
+                              : "text-[var(--text-on-dark-muted)] hover:bg-[var(--text-on-dark)]/10 hover:text-[var(--text-on-dark)]",
                           )}
                         >
                           <child.icon
@@ -291,8 +291,8 @@ function CollapsedRail({
               href={item.href}
               title={item.label}
               className={cn(
-                "flex size-10 items-center justify-center rounded-[12px] text-white/85 transition-colors hover:bg-white/10 hover:text-white",
-                active && "bg-white/15 text-white",
+                "flex size-10 items-center justify-center rounded-[12px] text-[var(--text-on-dark-muted)] transition-colors hover:bg-[var(--text-on-dark)]/10 hover:text-[var(--text-on-dark)]",
+                active && "bg-[var(--text-on-dark)]/15 text-[var(--text-on-dark)]",
               )}
             >
               <item.icon className="size-5 shrink-0 opacity-95" aria-hidden />
@@ -358,7 +358,7 @@ export function AdminSidebar({ userPermissions }: AdminSidebarProps) {
         data-collapsed={collapsed ? "" : undefined}
         aria-label="Điều hướng quản trị"
         className={cn(
-          "border-r border-white/10 bg-[var(--brand-house)] text-white transition-[width] motion-reduce:transition-none md:flex",
+          "border-r border-[var(--text-on-dark)]/12 bg-[var(--brand-house)] text-[var(--text-on-dark)] transition-[width] motion-reduce:transition-none md:flex",
           collapsed ? "w-14" : "w-full md:w-56 lg:w-64",
         )}
         style={{
@@ -368,7 +368,7 @@ export function AdminSidebar({ userPermissions }: AdminSidebarProps) {
       >
         <div
           className={cn(
-            "border-b border-white/10 transition-[padding] motion-reduce:transition-none",
+            "border-b border-[var(--text-on-dark)]/12 transition-[padding] motion-reduce:transition-none",
             collapsed ? "px-2 py-3" : "px-4 py-4",
           )}
           style={{
@@ -378,16 +378,16 @@ export function AdminSidebar({ userPermissions }: AdminSidebarProps) {
         >
           {collapsed ? (
             <div className="flex justify-center" aria-hidden>
-              <span className="flex size-10 items-center justify-center rounded-[12px] bg-white/10 text-sm font-semibold text-white">
+              <span className="flex size-10 items-center justify-center rounded-[12px] bg-[var(--text-on-dark)]/10 text-sm font-semibold text-[var(--text-on-dark)]">
                 C
               </span>
             </div>
           ) : (
             <>
-              <p className="text-xs font-medium tracking-wide text-white/70 uppercase">
+              <p className="text-xs font-medium tracking-wide text-[var(--text-on-dark-muted)] uppercase">
                 Quản trị
               </p>
-              <p className="mt-1 text-lg font-semibold tracking-[-0.01em]">
+              <p className="mt-1 text-lg font-semibold tracking-[-0.01em] text-[var(--text-on-dark)]">
                 Café Admin
               </p>
             </>
@@ -413,7 +413,7 @@ export function AdminSidebar({ userPermissions }: AdminSidebarProps) {
           )}
         </nav>
 
-        <div className="mt-auto border-t border-white/10 p-2">
+        <div className="mt-auto border-t border-[var(--text-on-dark)]/12 p-2">
           <div
             className={cn(
               "flex items-center gap-2",
@@ -423,7 +423,7 @@ export function AdminSidebar({ userPermissions }: AdminSidebarProps) {
             {!collapsed ? (
               <Link
                 href={clientRoutes.home}
-                className="flex min-w-0 flex-1 items-center gap-2 rounded-[12px] px-2 py-2 text-sm text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+                className="flex min-w-0 flex-1 items-center gap-2 rounded-[12px] px-2 py-2 text-sm text-[var(--text-on-dark-muted)] transition-colors hover:bg-[var(--text-on-dark)]/10 hover:text-[var(--text-on-dark)]"
                 title="Về cửa hàng"
               >
                 <span aria-hidden className="shrink-0 text-base">
@@ -435,7 +435,7 @@ export function AdminSidebar({ userPermissions }: AdminSidebarProps) {
             <button
               type="button"
               onClick={() => setCollapsed((c) => !c)}
-              className="flex size-9 shrink-0 items-center justify-center rounded-[12px] border border-white/15 text-white/90 transition-colors hover:bg-white/10 hover:text-white"
+              className="flex size-9 shrink-0 items-center justify-center rounded-[12px] border border-[var(--text-on-dark)]/18 text-[var(--text-on-dark)] transition-colors hover:bg-[var(--text-on-dark)]/10"
               aria-label={collapsed ? "Mở rộng sidebar" : "Thu gọn sidebar"}
               title={collapsed ? "Mở rộng sidebar" : "Thu gọn sidebar"}
             >

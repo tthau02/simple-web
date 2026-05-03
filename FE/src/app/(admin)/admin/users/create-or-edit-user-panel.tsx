@@ -9,8 +9,13 @@ import {
   type CommonFormItem,
 } from "@/components/shared/common";
 import { ApiError } from "@/lib/api-client";
-import { showToast } from "@/lib/toast";
+import { toast } from "sonner";
 import { useCreateUserMutation, useUpdateUserMutation } from "@/hooks/api";
+import {
+  parseStaticRoleIdToPayload,
+  primaryRoleIdStringFromUser,
+  STATIC_USER_ROLE_SELECT_OPTIONS,
+} from "@/constants/static-user-roles";
 import type { User } from "@/types/auth";
 import type { UserCreateOrEditRequest } from "@/types/users";
 
@@ -19,6 +24,7 @@ export type UserFormDraft = {
   fullName: string;
   email: string;
   password: string;
+  confirmPassword: string;
   phoneNumber: string;
   avatar: string;
   status: boolean;
@@ -30,6 +36,7 @@ const EMPTY_USER_DRAFT: UserFormDraft = {
   fullName: "",
   email: "",
   password: "",
+  confirmPassword: "",
   phoneNumber: "",
   avatar: "",
   status: true,
@@ -43,22 +50,12 @@ function toDraft(user: User | null): UserFormDraft {
     fullName: user.fullName,
     email: user.email,
     password: "",
+    confirmPassword: "",
     phoneNumber: user.phoneNumber ?? "",
     avatar: user.avatar ?? "",
     status: user.status,
-    roleIds: "",
+    roleIds: primaryRoleIdStringFromUser(user.roles),
   };
-}
-
-function parseRoleIds(raw: string): number[] | null {
-  const items = raw
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean)
-    .map((s) => Number(s))
-    .filter((n) => Number.isInteger(n) && n > 0);
-  if (!items.length) return null;
-  return Array.from(new Set(items));
 }
 
 export const USER_FORM_ITEMS: CommonFormItem<UserFormDraft>[] = [
@@ -70,12 +67,14 @@ export const USER_FORM_ITEMS: CommonFormItem<UserFormDraft>[] = [
         type: "input",
         name: "userName",
         label: "Tên đăng nhập",
+        placeholder: "Nhập tên đăng nhập",
         rules: { required: true, minLength: 3, maxLength: 100 },
       },
       {
         type: "input",
         name: "fullName",
         label: "Họ và tên",
+        placeholder: "Nhập họ và tên",
         rules: { required: true, minLength: 2, maxLength: 150 },
       },
     ],
@@ -88,32 +87,15 @@ export const USER_FORM_ITEMS: CommonFormItem<UserFormDraft>[] = [
         type: "email",
         name: "email",
         label: "Email",
+        placeholder: "Nhập email",
         rules: { required: true, emailFormat: true, maxLength: 200 },
       },
-      {
-        type: "password",
-        name: "password",
-        label: "Mật khẩu",
-        placeholder: "Bỏ trống khi sửa nếu không đổi",
-        rules: { minLength: 6, maxLength: 200 },
-      },
-    ],
-  },
-  {
-    type: "row",
-    columnsClassName: "md:grid-cols-2",
-    children: [
       {
         type: "input",
         name: "phoneNumber",
         label: "Số điện thoại",
+        placeholder: "Nhập số điện thoại",
         rules: { maxLength: 30 },
-      },
-      {
-        type: "input",
-        name: "roleIds",
-        label: "Vai trò",
-        placeholder: "Chọn vai trò",
       },
     ],
   },
@@ -121,6 +103,44 @@ export const USER_FORM_ITEMS: CommonFormItem<UserFormDraft>[] = [
     type: "row",
     columnsClassName: "md:grid-cols-2",
     children: [
+      {
+        type: "password",
+        name: "password",
+        label: "Mật khẩu",
+        placeholder: "Nhập mật khẩu",
+        rules: { minLength: 6, maxLength: 200 },
+      },
+      {
+        type: "password",
+        name: "confirmPassword",
+        label: "Nhập lại mật khẩu",
+        placeholder: "Nhập lại mật khẩu",
+        rules: {
+          maxLength: 200,
+          validate: (_value, all) => {
+            const pw = String(all.password ?? "").trim();
+            const cf = String(all.confirmPassword ?? "").trim();
+            if (!pw && !cf) return undefined;
+            if (!pw && cf) return "Chưa nhập mật khẩu.";
+            if (pw && !cf) return "Vui lòng nhập lại mật khẩu.";
+            if (pw !== cf) return "Mật khẩu nhập lại không khớp.";
+            return undefined;
+          },
+        },
+      },
+    ],
+  },
+  {
+    type: "row",
+    columnsClassName: "md:grid-cols-3",
+    children: [
+      {
+        type: "select",
+        name: "roleIds",
+        label: "Vai trò",
+        placeholder: "Chọn vai trò",
+        options: STATIC_USER_ROLE_SELECT_OPTIONS,
+      },
       {
         type: "image",
         name: "avatar",
@@ -131,6 +151,10 @@ export const USER_FORM_ITEMS: CommonFormItem<UserFormDraft>[] = [
         type: "switch",
         name: "status",
         label: "Hoạt động",
+        switchMapping: [
+          { key: true, text: "Đang hoạt động" },
+          { key: false, text: "Bị khóa" },
+        ],
       },
     ],
   },
@@ -151,13 +175,17 @@ export function CreateOrEditUserPanel({
   token,
   onOpenChange,
 }: CreateOrEditUserPanelProps) {
-  const [values, setValues] = useState<UserFormDraft>(() => toDraft(editingUser));
-  const [errors, setErrors] = useState<Partial<Record<keyof UserFormDraft, string>>>({});
+  const [values, setValues] = useState<UserFormDraft>(() =>
+    toDraft(editingUser),
+  );
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof UserFormDraft, string>>
+  >({});
   const createMutation = useCreateUserMutation(token);
   const updateMutation = useUpdateUserMutation(token);
 
   const buildPayload = (): UserCreateOrEditRequest => {
-    const roleIds = parseRoleIds(values.roleIds);
+    const roleIds = parseStaticRoleIdToPayload(values.roleIds);
     return {
       userName: values.userName.trim(),
       fullName: values.fullName.trim(),
@@ -175,13 +203,19 @@ export function CreateOrEditUserPanel({
     if (mode === "add" && !values.password.trim()) {
       nextErrors.password = "Mật khẩu là bắt buộc khi tạo mới.";
     }
+    const pw = values.password.trim();
+    const cf = values.confirmPassword.trim();
+    if (pw && !cf) {
+      nextErrors.confirmPassword = "Vui lòng nhập lại mật khẩu.";
+    }
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return false;
 
     if (!token) {
       setErrors((prev) => ({
         ...prev,
-        userName: prev.userName ?? "Thiếu access token. Vui lòng đăng nhập lại.",
+        userName:
+          prev.userName ?? "Thiếu access token. Vui lòng đăng nhập lại.",
       }));
       return false;
     }
@@ -190,23 +224,15 @@ export function CreateOrEditUserPanel({
     if (mode === "add") {
       createMutation.mutate(payload, {
         onSuccess: (user) => {
-          showToast({
-            type: "success",
-            title: "Đã tạo người dùng",
-            message: user.userName,
-            color: "success",
+          toast.success("Đã tạo người dùng", {
+            description: user.userName,
           });
           onOpenChange(false);
         },
         onError: (err) => {
           const message =
             err instanceof ApiError ? err.message : "Không thể tạo người dùng.";
-          showToast({
-            type: "error",
-            title: "Tạo thất bại",
-            message,
-            color: "destructive",
-          });
+          toast.error("Tạo thất bại", { description: message });
         },
       });
       return false;
@@ -216,23 +242,15 @@ export function CreateOrEditUserPanel({
       { id: editingUser.id, payload },
       {
         onSuccess: (user) => {
-          showToast({
-            type: "success",
-            title: "Đã cập nhật",
-            message: user.userName,
-            color: "success",
+          toast.success("Đã cập nhật", {
+            description: user.userName,
           });
           onOpenChange(false);
         },
         onError: (err) => {
           const message =
             err instanceof ApiError ? err.message : "Không thể cập nhật.";
-          showToast({
-            type: "error",
-            title: "Cập nhật thất bại",
-            message,
-            color: "destructive",
-          });
+          toast.error("Cập nhật thất bại", { description: message });
         },
       },
     );
@@ -271,6 +289,7 @@ export function CreateOrEditUserPanel({
               for (const key of Object.keys(patch) as (keyof UserFormDraft)[]) {
                 delete next[key];
               }
+              if ("password" in patch) delete next.confirmPassword;
               return next;
             });
           }}

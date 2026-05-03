@@ -55,7 +55,7 @@ export function ActionPanel({
   return (
     <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
       <DrawerContent className={cn("w-full max-w-184", className)}>
-        <DrawerHeader className="gap-4 border-b border-black/8">
+        <DrawerHeader className="gap-4 border-b border-border">
           <DrawerTitle>{title}</DrawerTitle>
         </DrawerHeader>
         {hasTabs ? (
@@ -83,20 +83,20 @@ export function ActionPanel({
           {children}
         </div>
 
-        <DrawerFooter className="border-t border-black/8">
+        <DrawerFooter className="border-t border-border">
           <div className="flex items-center justify-center gap-3">
             <DrawerClose asChild>
               <Button
                 type="button"
                 variant="outline"
-                className="h-8 rounded-[50px] border-[#00754A] px-3.5 text-xs font-semibold tracking-[-0.01em] text-[#00754A] transition-all duration-200 hover:bg-[#f2f0eb] active:scale-95"
+                className="h-8 rounded-[50px] border-primary px-3.5 text-xs font-semibold tracking-[-0.01em] text-primary transition-all duration-200 hover:bg-accent active:scale-95"
               >
                 {cancelLabel}
               </Button>
             </DrawerClose>
             <Button
               type="button"
-              className="h-8 rounded-[50px] border border-[#00754A] bg-[#00754A] px-3.5 text-xs font-semibold tracking-[-0.01em] text-white transition-all duration-200 hover:border-[#006241] hover:bg-[#006241] active:scale-95"
+              className="h-8 rounded-[50px] border border-primary bg-primary px-3.5 text-xs font-semibold tracking-[-0.01em] text-primary-foreground transition-all duration-200 hover:border-[var(--brand-heading)] hover:bg-[var(--brand-heading)] active:scale-95"
               onClick={() => {
                 const keepOpen = onConfirm?.() === false;
                 if (keepOpen) return;

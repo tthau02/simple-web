@@ -1,10 +1,9 @@
-import type { PagedResult } from "@/types/api";
 import type { User } from "@/types/auth";
 
 export type UserSearchParams = {
   page?: number;
   pageSize?: number;
-  sortedBy?: string;
+  sortBy?: string;
   isDesc?: boolean;
   userName?: string;
   fullName?: string;
@@ -23,5 +22,3 @@ export type UserCreateOrEditRequest = {
   status?: boolean;
   roleIds?: number[] | null;
 };
-
-export type UserPagedResult = PagedResult<User>;

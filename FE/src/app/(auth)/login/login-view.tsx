@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { clientRoutes } from "@/config/routes";
 import { useLoginMutation } from "@/hooks/api";
 import { ApiError } from "@/lib/api-client";
-import { showToast } from "@/lib/toast";
+import { toast } from "sonner";
 
 const ACCESS_TOKEN_KEY = "accessToken";
 const TOKEN_EXPIRY_KEY = "tokenExpiresAtUtc";
@@ -43,11 +43,7 @@ export function LoginView() {
       { login: loginVal.trim(), password },
       {
         onSuccess: (data) => {
-          showToast({
-            type: "success",
-            title: "Đăng nhập thành công",
-            color: "success",
-          });
+          toast.success("Đăng nhập thành công");
           if (typeof window !== "undefined") {
             localStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
             localStorage.setItem(TOKEN_EXPIRY_KEY, data.expiresAtUtc);
@@ -62,12 +58,7 @@ export function LoginView() {
             err instanceof ApiError
               ? err.message
               : "Đăng nhập không thành công.";
-          showToast({
-            type: "error",
-            title: "Đăng nhập thất bại",
-            message,
-            color: "destructive",
-          });
+          toast.error("Đăng nhập thất bại", { description: message });
         },
       },
     );
@@ -129,10 +120,7 @@ export function LoginView() {
               onCheckedChange={(checked) => setRemember(checked === true)}
               className="ds-checkbox-brand"
             />
-            <Label
-              htmlFor="auth-remember"
-              className="ds-auth-checkbox-label"
-            >
+            <Label htmlFor="auth-remember" className="ds-auth-checkbox-label">
               Remember me
             </Label>
           </div>

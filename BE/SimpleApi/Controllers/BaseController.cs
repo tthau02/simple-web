@@ -8,6 +8,7 @@ namespace SimpleApi.Controllers;
 /// Phản hồi chuẩn và context user từ HTTP — không chứa nghiệp vụ, không gọi DB hay service.
 /// </summary>
 [ApiController]
+[Route("v1/api/[controller]")]
 public abstract class BaseController : ControllerBase
 {
     protected ActionResult<ApiResponse<T>> OkResponse<T>(T data, string? message = null) =>

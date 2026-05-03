@@ -1,7 +1,9 @@
 export {
   CommonTable,
+  STATUS_BADGE_CLASSES,
   type CommonColumnType,
   type CommonTableAction,
+  type CommonTableBadgeMappingEntry,
   type CommonTableColumn,
   type CommonTableProps,
   type ImageCellValue,
@@ -50,5 +52,6 @@ export {
   type CommonFormSectionHeaderVariant,
   type CommonFormSelectFieldProps,
   type CommonFormSelectOption,
+  type CommonFormSwitchMappingEntry,
   type CommonFormTextFieldProps,
 } from "./common-form";

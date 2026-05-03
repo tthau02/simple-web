@@ -8,8 +8,8 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <ReduxProvider>
       <QueryProvider>
-        {children}
         <AppToaster />
+        {children}
       </QueryProvider>
     </ReduxProvider>
   );

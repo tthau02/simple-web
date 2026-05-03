@@ -45,7 +45,10 @@ function DrawerOverlay({
   return (
     <DrawerPrimitive.Overlay
       data-slot="drawer-overlay"
-      className={cn("fixed inset-0 z-50 bg-black/35", className)}
+      className={cn(
+        "fixed inset-0 z-50 bg-black/40 backdrop-blur-[4px]",
+        className,
+      )}
       {...props}
     />
   );
@@ -63,7 +66,7 @@ function DrawerContent({
       <DrawerPrimitive.Content
         data-slot="drawer-content"
         className={cn(
-          "fixed right-0 bottom-0 left-auto z-50 mt-24 flex h-[100dvh] w-full max-w-[28rem] flex-col rounded-l-[12px] border border-black/8 bg-white shadow-[0_0_0.5px_rgba(0,0,0,0.14),0_8px_24px_rgba(0,0,0,0.12)]",
+          "fixed right-0 bottom-0 left-auto z-50 mt-24 flex h-[100dvh] w-full max-w-[28rem] flex-col rounded-l-[12px] border border-border bg-card text-card-foreground shadow-sm dark:shadow-black/40",
           "cursor-default select-text",
           className,
         )}
@@ -108,7 +111,7 @@ function DrawerTitle({
     <DrawerPrimitive.Title
       data-slot="drawer-title"
       className={cn(
-        "text-base font-semibold tracking-[-0.01em] text-[var(--text-primary)]",
+        "text-base font-semibold tracking-[-0.01em] text-card-foreground",
         className,
       )}
       {...props}
@@ -123,7 +126,7 @@ function DrawerDescription({
   return (
     <DrawerPrimitive.Description
       data-slot="drawer-description"
-      className={cn("text-sm text-[var(--text-secondary)]", className)}
+      className={cn("text-sm text-muted-foreground", className)}
       {...props}
     />
   );

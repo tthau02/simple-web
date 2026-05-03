@@ -1,24 +1,44 @@
 "use client";
 
-import { Toaster } from "sonner";
+import * as React from "react";
+import {
+  CircleCheck,
+  Info,
+  Loader2,
+  TriangleAlert,
+  XCircle,
+} from "lucide-react";
+import { Toaster as Sonner, type ToasterProps } from "sonner";
 
-/** Sonner Toaster — gắn một lần trong `AppProviders`; dùng `showToast` hoặc `toast` từ `sonner`. */
-export function AppToaster() {
+import { useAppTheme } from "@/store/hooks";
+
+export function AppToaster({ ...props }: ToasterProps) {
+  const { theme } = useAppTheme();
+
   return (
-    <Toaster
-      position="bottom-right"
-      theme="light"
+    <Sonner
+      theme={theme}
       closeButton
-      offset="1rem"
-      toastOptions={{
-        duration: 4500,
-        classNames: {
-          toast:
-            "rounded-[12px] border border-black/[0.08] bg-white font-sans tracking-[-0.01em] shadow-[0px_0px_0.5px_0px_rgba(0,0,0,0.14),0px_8px_24px_rgba(0,0,0,0.12)]",
-          title: "text-[0.95rem] font-semibold text-[var(--text-primary)]",
-          description: "text-sm text-[var(--text-secondary)]",
-        },
+      className="toaster group"
+      icons={{
+        success: <CircleCheck className="size-4" aria-hidden />,
+        info: <Info className="size-4" aria-hidden />,
+        warning: <TriangleAlert className="size-4" aria-hidden />,
+        error: <XCircle className="size-4" aria-hidden />,
+        loading: <Loader2 className="size-4 animate-spin" aria-hidden />,
       }}
+      style={
+        {
+          "--normal-bg": "var(--popover)",
+          "--normal-text": "var(--popover-foreground)",
+          "--normal-border": "var(--border)",
+          "--border-radius": "var(--radius)",
+          "--toast-close-button-start": "unset",
+          "--toast-close-button-end": "0",
+          "--toast-close-button-transform": "translate(35%, -35%)",
+        } as React.CSSProperties
+      }
+      {...props}
     />
   );
 }
